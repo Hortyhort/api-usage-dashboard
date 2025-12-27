@@ -120,21 +120,21 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">Usage Logs</h1>
-          <p className="text-slate-400 text-sm mt-1.5 font-medium">Detailed request history and debugging</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-claude-text">Usage Logs</h1>
+          <p className="text-claude-text-muted text-sm mt-1.5 font-medium">Detailed request history and debugging</p>
         </div>
         <button
           type="button"
           onClick={handleExport}
           disabled={!isClient || filteredLogs.length === 0}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg ${!isClient || filteredLogs.length === 0 ? 'bg-slate-800/40 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] text-white shadow-blue-500/25'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg ${!isClient || filteredLogs.length === 0 ? 'bg-claude-beige text-claude-text-muted cursor-not-allowed' : 'bg-gradient-to-r from-claude-terracotta to-claude-terracotta hover:from-claude-terracotta-dark hover:to-claude-terracotta-dark active:scale-[0.98] text-white shadow-claude-terracotta/25'}`}
         >
           <Icons.Download />
           Export CSV
         </button>
       </div>
 
-      <div className="glass-card glass-border rounded-2xl p-4">
+      <div className="bg-white border border-claude-border rounded-2xl p-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px] relative">
             <label htmlFor="usage-search" className="sr-only">Search by API key</label>
@@ -144,25 +144,25 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
               placeholder="Search by API key..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-800/50 text-white pl-10 pr-4 py-2.5 rounded-xl border border-white/10 focus:border-blue-500/50 focus:outline-none placeholder-slate-500"
+              className="w-full bg-claude-beige text-claude-text pl-10 pr-4 py-2.5 rounded-xl border border-claude-border focus:border-claude-terracotta/50 focus:outline-none placeholder-claude-text-muted"
             />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><Icons.Search /></div>
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-claude-text-muted"><Icons.Search /></div>
           </div>
-          <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)} className="bg-slate-800/50 text-slate-200 px-4 py-2.5 rounded-xl border border-white/10 focus:border-blue-500/50 focus:outline-none">
+          <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)} className="bg-claude-beige text-claude-text px-4 py-2.5 rounded-xl border border-claude-border focus:border-claude-terracotta/50 focus:outline-none">
             <option value="all">All Models</option>
             <option value="claude-sonnet-4-5">Sonnet 4.5</option>
             <option value="claude-opus-4-5">Opus 4.5</option>
             <option value="claude-haiku-4-5">Haiku 4.5</option>
           </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-800/50 text-slate-200 px-4 py-2.5 rounded-xl border border-white/10 focus:border-blue-500/50 focus:outline-none">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-claude-beige text-claude-text px-4 py-2.5 rounded-xl border border-claude-border focus:border-claude-terracotta/50 focus:outline-none">
             <option value="all">All Status</option>
             <option value="success">Success</option>
             <option value="error">Error</option>
           </select>
           {hasFilters && (
             <div className="flex items-center gap-3">
-              <span className="text-xs text-slate-500">{activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}</span>
-              <button type="button" onClick={clearFilters} className="text-sm text-slate-400 hover:text-white transition-colors">
+              <span className="text-xs text-claude-text-muted">{activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}</span>
+              <button type="button" onClick={clearFilters} className="text-sm text-claude-text-muted hover:text-claude-text transition-colors">
                 Clear filters
               </button>
             </div>
@@ -173,24 +173,24 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
       {filteredLogs.length === 0 ? (
         <EmptyState title="No logs found" description="Try adjusting your filters or search query." />
       ) : (
-        <div className="glass-card glass-border rounded-2xl overflow-hidden">
+        <div className="bg-white border border-claude-border rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Timestamp</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Model</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Tokens</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Latency</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">API Key</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Status</th>
+                <tr className="border-b border-claude-border">
+                  <th className="text-left text-xs font-medium text-claude-text-muted uppercase tracking-wider px-6 py-4">Timestamp</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted uppercase tracking-wider px-6 py-4">Model</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted uppercase tracking-wider px-6 py-4">Tokens</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted uppercase tracking-wider px-6 py-4">Latency</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted uppercase tracking-wider px-6 py-4">API Key</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted uppercase tracking-wider px-6 py-4">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody className="divide-y divide-claude-border">
                 {pagedLogs.map((log) => (
                   <tr
                     key={log.id}
-                    className="hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    className="hover:bg-claude-beige/50 transition-colors cursor-pointer"
                     onClick={() => setSelectedLog(log)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
@@ -202,21 +202,21 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
                     role="button"
                     aria-label={`View details for ${formatModelName(log.model)} request at ${log.timestamp}`}
                   >
-                    <td className="px-6 py-4 text-sm text-slate-300 font-mono">{log.timestamp}</td>
+                    <td className="px-6 py-4 text-sm text-claude-text-muted font-mono">{log.timestamp}</td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-white font-medium">{formatModelName(log.model)}</span>
+                      <span className="text-sm text-claude-text font-medium">{formatModelName(log.model)}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm">
-                        <span className="text-blue-400">{log.inputTokens.toLocaleString()}</span>
-                        <span className="text-slate-500 mx-1">/</span>
-                        <span className="text-emerald-400">{log.outputTokens.toLocaleString()}</span>
+                        <span className="text-claude-terracotta">{log.inputTokens.toLocaleString()}</span>
+                        <span className="text-claude-text-muted mx-1">/</span>
+                        <span className="text-claude-terracotta-dark">{log.outputTokens.toLocaleString()}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-300 tabular-nums">{log.latency}s</td>
-                    <td className="px-6 py-4 text-sm text-slate-300">{log.apiKey}</td>
+                    <td className="px-6 py-4 text-sm text-claude-text-muted tabular-nums">{log.latency}s</td>
+                    <td className="px-6 py-4 text-sm text-claude-text-muted">{log.apiKey}</td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${log.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${log.status === 'success' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}>
                         {log.status}
                       </span>
                     </td>
@@ -226,14 +226,14 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.06] text-sm text-slate-400">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-claude-border text-sm text-claude-text-muted">
             <span>Showing {pagedLogs.length} of {filteredLogs.length} entries</span>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1} className={`px-3 py-1 rounded-lg ${currentPage === 1 ? 'text-slate-600' : 'text-slate-300 hover:text-white hover:bg-white/[0.06]'}`}>
+              <button type="button" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1} className={`px-3 py-1 rounded-lg ${currentPage === 1 ? 'text-claude-border' : 'text-claude-text-muted hover:text-claude-text hover:bg-claude-beige'}`}>
                 Prev
               </button>
-              <span className="text-xs text-slate-500">Page {currentPage} of {totalPages}</span>
-              <button type="button" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className={`px-3 py-1 rounded-lg ${currentPage === totalPages ? 'text-slate-600' : 'text-slate-300 hover:text-white hover:bg-white/[0.06]'}`}>
+              <span className="text-xs text-claude-text-muted">Page {currentPage} of {totalPages}</span>
+              <button type="button" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className={`px-3 py-1 rounded-lg ${currentPage === totalPages ? 'text-claude-border' : 'text-claude-text-muted hover:text-claude-text hover:bg-claude-beige'}`}>
                 Next
               </button>
             </div>

@@ -13,7 +13,9 @@ import { fetchDashboardData } from '../lib/api';
 import { mockDashboardData } from '../data/mockData';
 import type { DashboardData, Alert } from '../types/dashboard';
 import { useToast } from '../components/ui/ToastProvider';
+import { useTheme } from '../lib/ThemeContext';
 import { getSessionFromRequest, isAuthConfigured, SHARE_QUERY_KEY, verifyShareToken } from '../lib/auth';
+import { loadDashboardData } from '../lib/dataSource';
 
 type UsageDashboardProps = {
   initialData: DashboardData;
@@ -24,6 +26,14 @@ type UsageDashboardProps = {
 export const getServerSideProps: GetServerSideProps<UsageDashboardProps> = async ({ req, query }) => {
   const authReady = isAuthConfigured();
   const shareToken = typeof query[SHARE_QUERY_KEY] === 'string' ? query[SHARE_QUERY_KEY] : null;
+
+  const getInitialData = async () => {
+    try {
+      return await loadDashboardData();
+    } catch (error) {
+      return mockDashboardData;
+    }
+  };
 
   if (!authReady) {
     return {
@@ -36,11 +46,12 @@ export const getServerSideProps: GetServerSideProps<UsageDashboardProps> = async
 
   const session = getSessionFromRequest(req);
   if (session) {
+    const initialData = await getInitialData();
     return {
       props: {
-        initialData: mockDashboardData,
-        shareToken,
-        readOnly: Boolean(shareToken),
+        initialData,
+        shareToken: null,
+        readOnly: false,
       },
     };
   }
@@ -48,9 +59,10 @@ export const getServerSideProps: GetServerSideProps<UsageDashboardProps> = async
   if (shareToken) {
     const share = verifyShareToken(shareToken);
     if (share) {
+      const initialData = share.passwordDigest ? mockDashboardData : await getInitialData();
       return {
         props: {
-          initialData: mockDashboardData,
+          initialData,
           shareToken,
           readOnly: true,
         },
@@ -75,7 +87,6 @@ const isEditableTarget = (target: EventTarget | null) => {
 export default function UsageDashboard({ initialData, shareToken: initialShareToken, readOnly }: UsageDashboardProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
-  const [isDark, setIsDark] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
   const [dataStatus, setDataStatus] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -86,28 +97,14 @@ export default function UsageDashboard({ initialData, shareToken: initialShareTo
   const [sharePasscode, setSharePasscode] = useState('');
   const lastAlertsRef = useRef<Alert[] | null>(null);
   const { addToast } = useToast();
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const shareToken = initialShareToken;
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  useEffect(() => {
-    if (!isClient) return;
-    const storedTheme = window.localStorage.getItem('theme');
-    if (storedTheme === 'dark' || storedTheme === 'light') {
-      setIsDark(storedTheme === 'dark');
-      return;
-    }
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDark(prefersDark);
-  }, [isClient]);
-
-  useEffect(() => {
-    if (!isClient) return;
-    window.localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isClient, isDark]);
 
   useEffect(() => {
     if (readOnly) {
@@ -305,14 +302,10 @@ export default function UsageDashboard({ initialData, shareToken: initialShareTo
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950' : 'bg-gradient-to-br from-slate-100 via-white to-slate-100'} text-white font-sans`}>
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[90] focus:bg-slate-900 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">
+      <div className="min-h-screen bg-claude-cream dark:bg-claude-dark-bg text-claude-text dark:text-claude-dark-text font-sans transition-colors duration-300">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[90] focus:bg-claude-terracotta focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">
           Skip to content
         </a>
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-violet-500/10 rounded-full blur-3xl"></div>
-        </div>
 
         <Sidebar
           isOpen={sidebarOpen}
@@ -322,7 +315,7 @@ export default function UsageDashboard({ initialData, shareToken: initialShareTo
           user={dashboardData.user}
           unreadAlerts={unreadAlerts}
           isDark={isDark}
-          onThemeToggle={() => setIsDark(!isDark)}
+          onThemeToggle={toggleTheme}
           readOnly={readOnly}
         />
 
@@ -335,23 +328,23 @@ export default function UsageDashboard({ initialData, shareToken: initialShareTo
 
       {shareGateOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/70" />
-          <div className="relative z-10 w-full max-w-md glass-card glass-border rounded-2xl p-6">
-            <h2 className="text-xl font-semibold text-white">Passcode required</h2>
-            <p className="text-sm text-slate-400 mt-2">Enter the passcode shared with you to unlock this dashboard.</p>
+          <div className="absolute inset-0 bg-claude-text/50" />
+          <div className="relative z-10 w-full max-w-md bg-white border border-claude-border rounded-2xl p-6 shadow-claude-lg">
+            <h2 className="text-xl font-semibold text-claude-text">Passcode required</h2>
+            <p className="text-sm text-claude-text-muted mt-2">Enter the passcode shared with you to unlock this dashboard.</p>
             <div className="mt-4 space-y-3">
               <input
                 type="password"
                 value={sharePasscode}
                 onChange={(event) => setSharePasscode(event.target.value)}
                 placeholder="Enter passcode"
-                className="w-full bg-slate-800/70 text-white px-4 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full bg-claude-beige text-claude-text px-4 py-2.5 rounded-xl border border-claude-border focus:outline-none focus:ring-2 focus:ring-claude-terracotta/40 placeholder:text-claude-text-muted/60"
               />
-              {shareGateMessage && <div className="text-xs text-red-400">{shareGateMessage}</div>}
+              {shareGateMessage && <div className="text-xs text-claude-terracotta-dark">{shareGateMessage}</div>}
               <button
                 type="button"
                 onClick={handleUnlockShare}
-                className="w-full bg-blue-500/20 text-blue-200 hover:bg-blue-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                className="w-full bg-claude-terracotta text-white hover:bg-claude-terracotta-dark px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
               >
                 Unlock dashboard
               </button>

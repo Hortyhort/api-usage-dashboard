@@ -25,9 +25,9 @@ const SHARE_EXPIRY_OPTIONS = [
 ] as const;
 
 const MODEL_COLORS: Record<string, string> = {
-  'Claude Sonnet 4.5': '#60a5fa',
-  'Claude Opus 4.5': '#a78bfa',
-  'Claude Haiku 4.5': '#34d399',
+  'Claude Sonnet 4.5': '#DA7756',
+  'Claude Opus 4.5': '#C75B39',
+  'Claude Haiku 4.5': '#E8A088',
 };
 
 const getTrend = (values: number[]) => {
@@ -337,43 +337,43 @@ const DashboardPage = ({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">Dashboard</h1>
-          <p className="text-slate-400 text-sm mt-1.5 font-medium">Monitor your Claude API consumption</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-claude-text dark:text-claude-dark-text">Dashboard</h1>
+          <p className="text-claude-text-muted dark:text-claude-dark-text-muted text-sm mt-1.5 font-medium">Monitor your Claude API consumption</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {readOnly && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] text-xs text-slate-300 font-medium">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-claude-beige dark:bg-claude-dark-surface-hover text-xs text-claude-text-muted dark:text-claude-dark-text-muted dark:text-claude-dark-text-muted font-medium">
               <Icons.Info />
               Read-only share
             </div>
           )}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isLive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700/50 text-slate-400'}`}>
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isLive ? 'bg-claude-terracotta/10 text-claude-terracotta' : 'bg-claude-beige-dark dark:bg-claude-dark-surface-hover text-claude-text-muted dark:text-claude-dark-text-muted'}`}>
             <div className={`${isLive ? 'animate-pulse' : ''}`}><Icons.Live /></div>
             <span className="text-xs font-medium">{isLive ? 'Live' : 'Paused'}</span>
-            <button type="button" onClick={() => setIsLive(!isLive)} className="ml-1 hover:text-white transition-colors" aria-label={isLive ? 'Pause live mode' : 'Resume live mode'}>
+            <button type="button" onClick={() => setIsLive(!isLive)} className="ml-1 hover:text-claude-text transition-colors" aria-label={isLive ? 'Pause live mode' : 'Resume live mode'}>
               {isLive ? <Icons.X /> : <Icons.Refresh />}
             </button>
           </div>
           {dataStatus === 'loading' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-xs font-medium">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-claude-terracotta/10 text-claude-terracotta text-xs font-medium">
               <Icons.Refresh />
               <span className="animate-pulse">Syncing</span>
             </div>
           )}
           {dataStatus === 'error' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 text-xs font-medium">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-claude-terracotta-dark/10 text-claude-terracotta-dark text-xs font-medium">
               Offline
             </div>
           )}
           <Tooltip label={`Synced at ${lastUpdatedFull}`}>
-            <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] text-xs text-slate-400 font-medium">
+            <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-claude-beige text-xs text-claude-text-muted dark:text-claude-dark-text-muted font-medium">
               <Icons.Refresh />
               Updated {lastUpdatedLabel}
             </span>
           </Tooltip>
-          <select value={timeRange} onChange={(e) => setTimeRange(e.target.value as (typeof RANGE_OPTIONS)[number]['value'])} className="glass-card glass-border bg-white/5 text-slate-200 px-4 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 cursor-pointer hover:bg-white/10">
+          <select value={timeRange} onChange={(e) => setTimeRange(e.target.value as (typeof RANGE_OPTIONS)[number]['value'])} className="bg-white border border-claude-border text-claude-text px-4 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-claude-terracotta/50 transition-all duration-200 cursor-pointer hover:bg-claude-beige">
             {RANGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value} className="bg-slate-900">{option.label}</option>
+              <option key={option.value} value={option.value} className="bg-white">{option.label}</option>
             ))}
           </select>
           {timeRange === 'custom' && (
@@ -384,16 +384,16 @@ const DashboardPage = ({
                 onChange={(event) => setCustomRange((prev) => ({ ...prev, start: event.target.value }))}
                 min={sortedDailyUsage[0]?.date}
                 max={sortedDailyUsage[sortedDailyUsage.length - 1]?.date}
-                className="bg-slate-800/60 text-slate-200 px-3 py-2 rounded-lg text-xs border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="bg-claude-beige text-claude-text px-3 py-2 rounded-lg text-xs border border-claude-border focus:outline-none focus:ring-2 focus:ring-claude-terracotta/40"
               />
-              <span className="text-xs text-slate-500">to</span>
+              <span className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">to</span>
               <input
                 type="date"
                 value={customRange.end}
                 onChange={(event) => setCustomRange((prev) => ({ ...prev, end: event.target.value }))}
                 min={sortedDailyUsage[0]?.date}
                 max={sortedDailyUsage[sortedDailyUsage.length - 1]?.date}
-                className="bg-slate-800/60 text-slate-200 px-3 py-2 rounded-lg text-xs border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="bg-claude-beige text-claude-text px-3 py-2 rounded-lg text-xs border border-claude-border focus:outline-none focus:ring-2 focus:ring-claude-terracotta/40"
               />
             </div>
           )}
@@ -401,7 +401,7 @@ const DashboardPage = ({
             type="button"
             onClick={onRefresh}
             disabled={dataStatus === 'loading'}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${dataStatus === 'loading' ? 'bg-slate-800/30 text-slate-500 cursor-not-allowed' : 'bg-slate-800/60 hover:bg-slate-700/60 text-slate-100'}`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${dataStatus === 'loading' ? 'bg-claude-beige-dark text-claude-text-muted cursor-not-allowed' : 'bg-white border border-claude-border hover:bg-claude-beige text-claude-text'}`}
           >
             <Icons.Refresh />
             Refresh
@@ -410,17 +410,17 @@ const DashboardPage = ({
             <button
               type="button"
               onClick={() => setExportOpen((open) => !open)}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-500/25"
+              className="flex items-center gap-2 bg-claude-terracotta hover:bg-claude-terracotta-dark active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg shadow-claude-terracotta/25"
             >
               <Icons.Download />
               Export
             </button>
             {exportOpen && (
-              <div className="absolute right-0 mt-2 w-52 glass-card glass-border rounded-xl p-2 shadow-2xl z-30">
+              <div className="absolute right-0 mt-2 w-52 bg-white border border-claude-border rounded-xl p-2 shadow-claude-lg z-30">
                 <button
                   type="button"
                   onClick={() => { handleExport('csv'); setExportOpen(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-white/[0.06] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-claude-text hover:bg-claude-beige dark:hover:bg-claude-dark-surface-hover transition-colors"
                 >
                   <Icons.Download />
                   Export CSV
@@ -428,7 +428,7 @@ const DashboardPage = ({
                 <button
                   type="button"
                   onClick={() => { handleExport('json'); setExportOpen(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-white/[0.06] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-claude-text hover:bg-claude-beige dark:hover:bg-claude-dark-surface-hover transition-colors"
                 >
                   <Icons.Copy />
                   Export JSON
@@ -441,43 +441,43 @@ const DashboardPage = ({
               <button
                 type="button"
                 onClick={() => setShareOpen((open) => !open)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 transition-all duration-200"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-claude-border hover:bg-claude-beige text-claude-text transition-all duration-200"
               >
                 <Icons.Copy />
                 Share
               </button>
               {shareOpen && (
-                <div className="absolute right-0 mt-2 w-72 glass-card glass-border rounded-xl p-4 shadow-2xl z-30">
-                  <div className="text-xs text-slate-400 uppercase tracking-wider">Share read-only link</div>
+                <div className="absolute right-0 mt-2 w-72 bg-white border border-claude-border rounded-xl p-4 shadow-claude-lg z-30">
+                  <div className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted uppercase tracking-wider">Share read-only link</div>
                   <div className="mt-3 space-y-3">
-                    <label className="text-xs text-slate-500">Expiration</label>
+                    <label className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Expiration</label>
                     <select
                       value={shareExpiry}
                       onChange={(event) => setShareExpiry(event.target.value)}
-                      className="w-full bg-slate-800/60 text-slate-200 px-3 py-2 rounded-lg text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      className="w-full bg-claude-beige text-claude-text px-3 py-2 rounded-lg text-sm border border-claude-border focus:outline-none focus:ring-2 focus:ring-claude-terracotta/40"
                     >
                       {SHARE_EXPIRY_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value} className="bg-slate-900">{option.label}</option>
+                        <option key={option.value} value={option.value} className="bg-white">{option.label}</option>
                       ))}
                     </select>
-                    <label className="text-xs text-slate-500">Password (optional)</label>
+                    <label className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Password (optional)</label>
                     <input
                       type="password"
                       value={sharePassword}
                       onChange={(event) => setSharePassword(event.target.value)}
                       placeholder="Add a passcode"
-                      className="w-full bg-slate-800/60 text-slate-200 px-3 py-2 rounded-lg text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      className="w-full bg-claude-beige text-claude-text px-3 py-2 rounded-lg text-sm border border-claude-border focus:outline-none focus:ring-2 focus:ring-claude-terracotta/40"
                     />
                     <button
                       type="button"
                       onClick={handleShare}
                       disabled={shareLoading}
-                      className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${shareLoading ? 'bg-slate-800/40 text-slate-500 cursor-not-allowed' : 'bg-blue-500/20 text-blue-200 hover:bg-blue-500/30'}`}
+                      className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${shareLoading ? 'bg-claude-beige-dark text-claude-text-muted cursor-not-allowed' : 'bg-claude-terracotta text-white hover:bg-claude-terracotta-dark'}`}
                     >
                       {shareLoading ? 'Creating link...' : 'Generate link'}
                     </button>
                     {shareLink && (
-                      <div className="rounded-lg border border-white/10 bg-slate-900/40 p-2 text-xs text-slate-300 break-all">
+                      <div className="rounded-lg border border-claude-border bg-claude-beige p-2 text-xs text-claude-text break-all">
                         {shareLink}
                       </div>
                     )}
@@ -502,7 +502,7 @@ const DashboardPage = ({
           copyValue={String(rangeTotals.totalTokens)}
           copyLabel="Total tokens"
           sparkline={tokensSparkline}
-          sparklineColor="#60a5fa"
+          sparklineColor="#DA7756"
         />
         <StatCard
           title="Requests"
@@ -516,7 +516,7 @@ const DashboardPage = ({
           copyValue={String(rangeTotals.requests)}
           copyLabel="Requests"
           sparkline={requestsSparkline}
-          sparklineColor="#a78bfa"
+          sparklineColor="#C75B39"
         />
         <StatCard
           title="Est. Cost"
@@ -530,7 +530,7 @@ const DashboardPage = ({
           copyValue={formatCurrency(rangeTotals.cost)}
           copyLabel="Estimated cost"
           sparkline={costSparkline}
-          sparklineColor="#fbbf24"
+          sparklineColor="#DA7756"
         />
         <StatCard
           title="Projected"
@@ -543,21 +543,21 @@ const DashboardPage = ({
           copyValue={formatCurrency(projectedMonthEnd)}
           copyLabel="Projected month end cost"
           sparkline={costSparkline}
-          sparklineColor={projectedMonthEnd > data.billingCycle.budgetLimit ? '#f87171' : '#34d399'}
+          sparklineColor={projectedMonthEnd > data.billingCycle.budgetLimit ? '#C75B39' : '#DA7756'}
         />
       </div>
 
       {projectedMonthEnd > data.billingCycle.budgetLimit && (
-        <div className="glass-card glass-border rounded-2xl p-4 border-l-4 border-l-amber-500 animate-slide-up" style={{ animationDelay: '200ms' }}>
+        <div className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-4 border-l-4 border-l-claude-terracotta animate-slide-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+            <div className="p-2 bg-claude-terracotta/20 rounded-lg text-claude-terracotta">
               <Icons.Warning />
             </div>
             <div>
-              <h3 className="text-white font-medium">Budget Alert</h3>
-              <p className="text-slate-400 text-sm mt-1">
+              <h3 className="text-claude-text dark:text-claude-dark-text font-medium">Budget Alert</h3>
+              <p className="text-claude-text-muted text-sm mt-1">
                 At current usage rate, you will exceed your ${data.billingCycle.budgetLimit.toFixed(2)} budget by{' '}
-                <span className="text-amber-400 font-medium">${(projectedMonthEnd - data.billingCycle.budgetLimit).toFixed(2)}</span> this month.
+                <span className="text-claude-terracotta font-medium">${(projectedMonthEnd - data.billingCycle.budgetLimit).toFixed(2)}</span> this month.
                 {typeof daysUntilBudget === 'number' && daysUntilBudget > 0 && ` You have approximately ${daysUntilBudget} days until budget is reached.`}
               </p>
             </div>
@@ -566,30 +566,30 @@ const DashboardPage = ({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <section className="lg:col-span-2 glass-card glass-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '250ms' }}>
+        <section className="lg:col-span-2 bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '250ms' }}>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-medium text-white">Daily Usage</h3>
-              <p className="text-sm text-slate-400 mt-1">Input and output token consumption</p>
+              <h3 className="text-lg font-medium text-claude-text">Daily Usage</h3>
+              <p className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted mt-1">Input and output token consumption</p>
             </div>
-            <div className="flex items-center gap-2 bg-white/[0.04] p-1 rounded-lg">
-              <button type="button" onClick={() => setChartMode('sideBySide')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${chartMode === 'sideBySide' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300 hover:bg-white/5'}`}>Grouped</button>
-              <button type="button" onClick={() => setChartMode('stacked')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${chartMode === 'stacked' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300 hover:bg-white/5'}`}>Stacked</button>
+            <div className="flex items-center gap-2 bg-claude-beige p-1 rounded-lg">
+              <button type="button" onClick={() => setChartMode('sideBySide')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${chartMode === 'sideBySide' ? 'bg-white text-claude-text shadow-sm' : 'text-claude-text-muted hover:text-claude-text hover:bg-claude-beige-dark'}`}>Grouped</button>
+              <button type="button" onClick={() => setChartMode('stacked')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${chartMode === 'stacked' ? 'bg-white text-claude-text shadow-sm' : 'text-claude-text-muted hover:text-claude-text hover:bg-claude-beige-dark'}`}>Stacked</button>
             </div>
           </div>
           <BarChart data={filteredDailyUsage} stacked={chartMode === 'stacked'} highlightDate={latestUsageDate} overlaySeries={overlaySeries} />
           {selectedModel && (
-            <div className="mt-4 text-xs text-slate-400">Overlay: <span className="text-slate-200 font-medium">{selectedModel}</span> (estimated by model share)</div>
+            <div className="mt-4 text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Overlay: <span className="text-claude-text dark:text-claude-dark-text font-medium">{selectedModel}</span> (estimated by model share)</div>
           )}
         </section>
 
-        <section className="glass-card glass-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '300ms' }}>
+        <section className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '300ms' }}>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-medium text-white">Model Usage</h3>
-              <p className="text-sm text-slate-400 mt-1">Token breakdown by model</p>
+              <h3 className="text-lg font-medium text-claude-text">Model Usage</h3>
+              <p className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted mt-1">Token breakdown by model</p>
             </div>
-            <button type="button" className="p-2 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition-colors" aria-label="Model breakdown settings">
+            <button type="button" className="p-2 rounded-lg hover:bg-claude-beige text-claude-text-muted hover:text-claude-text transition-colors" aria-label="Model breakdown settings">
               <Icons.Settings />
             </button>
           </div>
@@ -602,60 +602,60 @@ const DashboardPage = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <section className="lg:col-span-2 glass-card glass-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '340ms' }}>
+        <section className="lg:col-span-2 bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '340ms' }}>
           <LineChart
             values={dailyCosts}
-            stroke="#60a5fa"
+            stroke="#DA7756"
             label="Cost over time"
             formatValue={formatCurrency}
             rangeLabel={rangeLabel}
           />
         </section>
-        <section className="glass-card glass-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '380ms' }}>
+        <section className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '380ms' }}>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 bg-slate-500/20 rounded-xl ring-1 ring-slate-500/30 text-slate-300"><Icons.Chart /></div>
+            <div className="p-2.5 bg-claude-terracotta/10 rounded-xl ring-1 ring-claude-terracotta/30 text-claude-terracotta"><Icons.Chart /></div>
             <div>
-              <h3 className="font-medium text-white">Operational Insights</h3>
-              <p className="text-sm text-slate-500">Based on recent request logs</p>
+              <h3 className="font-medium text-claude-text">Operational Insights</h3>
+              <p className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted">Based on recent request logs</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="glass-card glass-border rounded-xl p-3">
+            <div className="bg-claude-beige dark:bg-claude-dark-surface-hover border border-claude-border dark:border-claude-dark-border rounded-xl p-3">
               <Tooltip label="Average tokens per request from usage logs.">
-                <span className="text-xs text-slate-500">Avg tokens</span>
+                <span className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Avg tokens</span>
               </Tooltip>
               <CopyableValue
-                display={<div className="text-lg font-semibold text-white mt-1 tabular-nums">{formatNumber(Math.round(avgTokensPerRequest))}</div>}
+                display={<div className="text-lg font-semibold text-claude-text dark:text-claude-dark-text mt-1 tabular-nums">{formatNumber(Math.round(avgTokensPerRequest))}</div>}
                 value={Math.round(avgTokensPerRequest).toString()}
                 label="Average tokens"
               />
             </div>
-            <div className="glass-card glass-border rounded-xl p-3">
+            <div className="bg-claude-beige dark:bg-claude-dark-surface-hover border border-claude-border dark:border-claude-dark-border rounded-xl p-3">
               <Tooltip label="Median tokens per request from usage logs.">
-                <span className="text-xs text-slate-500">Median tokens</span>
+                <span className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Median tokens</span>
               </Tooltip>
               <CopyableValue
-                display={<div className="text-lg font-semibold text-white mt-1 tabular-nums">{formatNumber(Math.round(medianTokensPerRequest))}</div>}
+                display={<div className="text-lg font-semibold text-claude-text dark:text-claude-dark-text mt-1 tabular-nums">{formatNumber(Math.round(medianTokensPerRequest))}</div>}
                 value={Math.round(medianTokensPerRequest).toString()}
                 label="Median tokens"
               />
             </div>
-            <div className="glass-card glass-border rounded-xl p-3">
+            <div className="bg-claude-beige dark:bg-claude-dark-surface-hover border border-claude-border dark:border-claude-dark-border rounded-xl p-3">
               <Tooltip label="95th percentile latency across recent requests.">
-                <span className="text-xs text-slate-500">P95 latency</span>
+                <span className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">P95 latency</span>
               </Tooltip>
               <CopyableValue
-                display={<div className="text-lg font-semibold text-white mt-1 tabular-nums">{p95Latency.toFixed(2)}s</div>}
+                display={<div className="text-lg font-semibold text-claude-text dark:text-claude-dark-text mt-1 tabular-nums">{p95Latency.toFixed(2)}s</div>}
                 value={p95Latency.toFixed(2)}
                 label="P95 latency"
               />
             </div>
-            <div className="glass-card glass-border rounded-xl p-3">
+            <div className="bg-claude-beige dark:bg-claude-dark-surface-hover border border-claude-border dark:border-claude-dark-border rounded-xl p-3">
               <Tooltip label="Percentage of requests that returned errors.">
-                <span className="text-xs text-slate-500">Error rate</span>
+                <span className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Error rate</span>
               </Tooltip>
               <CopyableValue
-                display={<div className="text-lg font-semibold text-white mt-1 tabular-nums">{errorRate.toFixed(1)}%</div>}
+                display={<div className="text-lg font-semibold text-claude-text dark:text-claude-dark-text mt-1 tabular-nums">{errorRate.toFixed(1)}%</div>}
                 value={errorRate.toFixed(1)}
                 label="Error rate"
               />
@@ -665,31 +665,31 @@ const DashboardPage = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <section className="glass-card glass-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '420ms' }}>
+        <section className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '420ms' }}>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-blue-500/20 rounded-xl ring-1 ring-blue-500/30 text-blue-400"><Icons.Cost /></div>
+            <div className="p-2.5 bg-claude-terracotta/10 rounded-xl ring-1 ring-claude-terracotta/30 text-claude-terracotta"><Icons.Cost /></div>
             <div>
-              <h3 className="font-medium text-white">Billing Cycle</h3>
-              <p className="text-sm text-slate-500">{data.billingCycle.start} - {data.billingCycle.end}</p>
+              <h3 className="font-medium text-claude-text">Billing Cycle</h3>
+              <p className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted">{data.billingCycle.start} - {data.billingCycle.end}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Tooltip label="Total spend vs budget for the current billing cycle.">
-                <span className="text-sm text-slate-400">Budget used</span>
+                <span className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted">Budget used</span>
               </Tooltip>
               <CopyableValue
-                display={<span className="tabular-nums text-white font-medium">{formatCurrency(totalCost)} / {formatCurrency(data.billingCycle.budgetLimit)}</span>}
+                display={<span className="tabular-nums text-claude-text dark:text-claude-dark-text font-medium">{formatCurrency(totalCost)} / {formatCurrency(data.billingCycle.budgetLimit)}</span>}
                 value={`${formatCurrency(totalCost)} / ${formatCurrency(data.billingCycle.budgetLimit)}`}
                 label="Budget used"
               />
             </div>
-            <ProgressBar value={budgetUsed} max={100} colorClass={`bg-gradient-to-r ${budgetUsed > 90 ? 'from-red-500 to-red-400' : budgetUsed > 70 ? 'from-amber-500 to-amber-400' : 'from-blue-500 via-violet-500 to-violet-400'}`} showLabel />
+            <ProgressBar value={budgetUsed} max={100} colorClass={`bg-gradient-to-r ${budgetUsed > 90 ? 'from-claude-terracotta-dark to-claude-terracotta' : budgetUsed > 70 ? 'from-claude-terracotta to-claude-terracotta' : 'from-claude-terracotta to-claude-terracotta-dark'}`} showLabel />
           </div>
-          <div className="mt-4 pt-4 border-t border-white/[0.06] space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-4 pt-4 border-t border-claude-border dark:border-claude-dark-border space-y-3">
+            <div className="flex items-center justify-between text-xs text-claude-text-muted dark:text-claude-dark-text-muted">
               <span>Growth adjustment</span>
-              <span className="text-slate-200 font-medium">{growthRate}%</span>
+              <span className="text-claude-text dark:text-claude-dark-text font-medium">{growthRate}%</span>
             </div>
             <input
               type="range"
@@ -698,43 +698,43 @@ const DashboardPage = ({
               step={1}
               value={growthRate}
               onChange={(event) => setGrowthRate(Number(event.target.value))}
-              className="w-full"
+              className="w-full accent-claude-terracotta"
             />
-            <div className="text-xs text-slate-500">
-              Projected month-end spend: <span className="text-slate-200 font-medium">{formatCurrency(projectedMonthEnd)}</span>
+            <div className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">
+              Projected month-end spend: <span className="text-claude-text dark:text-claude-dark-text font-medium">{formatCurrency(projectedMonthEnd)}</span>
             </div>
           </div>
         </section>
 
-        <section className="glass-card glass-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '460ms' }}>
+        <section className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '460ms' }}>
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2.5 bg-green-500/20 rounded-xl ring-1 ring-green-500/30 text-green-400"><Icons.Savings /></div>
-              <h3 className="font-medium text-white">Cost Savings</h3>
+              <div className="p-2.5 bg-claude-terracotta/10 rounded-xl ring-1 ring-claude-terracotta/30 text-claude-terracotta"><Icons.Savings /></div>
+              <h3 className="font-medium text-claude-text">Cost Savings</h3>
             </div>
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <CopyableValue
-                  display={<div className="text-3xl font-semibold tabular-nums tracking-tight bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">{formatCurrency(savings)}</div>}
+                  display={<div className="text-3xl font-semibold tabular-nums tracking-tight text-claude-terracotta">{formatCurrency(savings)}</div>}
                   value={formatCurrency(savings)}
                   label="Cost savings"
                 />
-                <div className="text-sm text-slate-400 font-medium mt-1">Saved from caching</div>
+                <div className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted font-medium mt-1">Saved from caching</div>
               </div>
               <div>
                 <CopyableValue
-                  display={<div className="text-2xl font-semibold text-white tabular-nums tracking-tight">{formatNumber(data.currentPeriod.cacheReadTokens)}</div>}
+                  display={<div className="text-2xl font-semibold text-claude-text dark:text-claude-dark-text tabular-nums tracking-tight">{formatNumber(data.currentPeriod.cacheReadTokens)}</div>}
                   value={data.currentPeriod.cacheReadTokens.toString()}
                   label="Cache hits"
                 />
-                <div className="text-sm text-slate-400 font-medium mt-1">Cache hits</div>
+                <div className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted font-medium mt-1">Cache hits</div>
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-white/[0.06]">
+            <div className="mt-4 pt-4 border-t border-claude-border dark:border-claude-dark-border">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Cache hit rate</span>
+                <span className="text-claude-text-muted">Cache hit rate</span>
                 <CopyableValue
-                  display={<span className="text-emerald-400 font-medium">{cacheHitRate.toFixed(1)}%</span>}
+                  display={<span className="text-claude-terracotta font-medium">{cacheHitRate.toFixed(1)}%</span>}
                   value={cacheHitRate.toFixed(1)}
                   label="Cache hit rate"
                 />
@@ -743,20 +743,20 @@ const DashboardPage = ({
           </div>
         </section>
 
-        <section className="glass-card glass-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
+        <section className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-5 sm:p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-violet-500/20 rounded-xl ring-1 ring-violet-500/30 text-violet-400"><Icons.Calendar /></div>
+            <div className="p-2.5 bg-claude-terracotta/10 rounded-xl ring-1 ring-claude-terracotta/30 text-claude-terracotta"><Icons.Calendar /></div>
             <div>
-              <h3 className="font-medium text-white">Remaining Days</h3>
-              <p className="text-sm text-slate-500">Billing cycle countdown</p>
+              <h3 className="font-medium text-claude-text">Remaining Days</h3>
+              <p className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted">Billing cycle countdown</p>
             </div>
           </div>
           <CopyableValue
-            display={<div className="text-4xl font-semibold text-white tabular-nums tracking-tight mb-2">{data.billingCycle.daysRemaining}</div>}
+            display={<div className="text-4xl font-semibold text-claude-text dark:text-claude-dark-text tabular-nums tracking-tight mb-2">{data.billingCycle.daysRemaining}</div>}
             value={data.billingCycle.daysRemaining.toString()}
             label="Days remaining"
           />
-          <div className="text-sm text-slate-400">Days left in current cycle</div>
+          <div className="text-sm text-claude-text-muted dark:text-claude-dark-text-muted">Days left in current cycle</div>
         </section>
       </div>
     </div>

@@ -2,8 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Inter font for macOS-like typography */
+/* Import Inter font for clean typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Claude color palette - Light mode */
+  --claude-cream: #FAF8F3;
+  --claude-beige: #F5F0E8;
+  --claude-beige-dark: #E8E0D4;
+  --claude-terracotta: #DA7756;
+  --claude-terracotta-dark: #C75B39;
+  --claude-text: #2D2A26;
+  --claude-text-muted: #6B6560;
+  --claude-border: #E0D8CC;
+  --claude-surface: #FFFFFF;
+  --claude-surface-hover: #F5F0E8;
+}
+
+.dark {
+  /* Claude color palette - Dark mode */
+  --claude-cream: #1C1917;
+  --claude-beige: #292524;
+  --claude-beige-dark: #3D3835;
+  --claude-terracotta: #E8956F;
+  --claude-terracotta-dark: #DA7756;
+  --claude-text: #FAFAF9;
+  --claude-text-muted: #A8A29E;
+  --claude-border: #44403C;
+  --claude-surface: #292524;
+  --claude-surface-hover: #3D3835;
+}
 
 @layer base {
   /* Smooth scrolling and better text rendering */
@@ -15,11 +43,11 @@
 
   /* Selection styling */
   ::selection {
-    background-color: rgba(59, 130, 246, 0.3);
-    color: white;
+    background-color: rgba(218, 119, 86, 0.25);
+    color: var(--claude-text);
   }
 
-  /* Custom scrollbar for webkit browsers - macOS style */
+  /* Custom scrollbar - Claude style */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -30,59 +58,69 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(45, 42, 38, 0.15);
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(45, 42, 38, 0.25);
   }
 }
 
 @layer components {
-  /* Glass card base - macOS style frosted glass */
+  /* Claude-style card */
+  .claude-card {
+    @apply relative overflow-hidden;
+    background: var(--claude-surface);
+    border: 1px solid var(--claude-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .claude-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .claude-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .claude-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Glass card for dark mode compatibility */
   .glass-card {
     @apply relative overflow-hidden;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.02) 100%
-    );
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: var(--claude-surface);
+    border: 1px solid var(--claude-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
-  /* Glass card with noise texture overlay */
-  .glass-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.02;
-    pointer-events: none;
-    mix-blend-mode: overlay;
+  .dark .glass-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
 
-  /* Beveled glass border effect */
+  /* Beveled border effect */
   .glass-border {
-    @apply border border-white/[0.08];
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.1),
-      0 0 0 1px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--claude-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
-  /* Gradient text effect */
+  .dark .glass-border {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Gradient text effect - Claude terracotta */
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #60a5fa 0%, #34d399 50%, #a78bfa 100%);
+    background-image: linear-gradient(135deg, var(--claude-terracotta) 0%, var(--claude-terracotta-dark) 100%);
   }
 
   /* Vibrant number display */
   .vibrant-number {
-    @apply bg-clip-text text-transparent font-semibold;
-    background-image: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+    @apply font-semibold;
+    color: var(--claude-text);
   }
 
   /* Glow effect for important elements */
@@ -95,7 +133,7 @@
     position: absolute;
     inset: -1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+    background: linear-gradient(135deg, rgba(218, 119, 86, 0.15), rgba(199, 91, 57, 0.15));
     filter: blur(15px);
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -124,7 +162,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.05) 50%,
+      rgba(218, 119, 86, 0.08) 50%,
       transparent 100%
     );
     background-size: 200% 100%;
@@ -136,16 +174,30 @@
     100% { background-position: 200% 0; }
   }
 
-  /* Tooltip arrow with proper styling */
-  .tooltip-arrow {
-    @apply absolute top-full left-1/2 -translate-x-1/2;
-    border: 8px solid transparent;
-    border-top-color: rgba(15, 23, 42, 0.95);
+  /* Focus ring - Claude style */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    --tw-ring-color: rgba(218, 119, 86, 0.5);
+    --tw-ring-offset-color: var(--claude-cream);
   }
 
-  /* Focus ring - macOS style */
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-slate-900;
+  .dark .focus-ring {
+    --tw-ring-color: rgba(232, 149, 111, 0.5);
+  }
+
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(168, 162, 158, 0.3);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 162, 158, 0.5);
+  }
+
+  /* Dark mode selection */
+  .dark ::selection {
+    background-color: rgba(232, 149, 111, 0.3);
+    color: var(--claude-text);
   }
 }
 
@@ -156,18 +208,7 @@
   }
 
   .text-shadow-soft {
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Backdrop saturate for richer glass effect */
-  .backdrop-saturate-150 {
-    backdrop-filter: saturate(150%);
-    -webkit-backdrop-filter: saturate(150%);
-  }
-
-  .backdrop-saturate-180 {
-    backdrop-filter: saturate(180%);
-    -webkit-backdrop-filter: saturate(180%);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   /* Animation delay utilities */

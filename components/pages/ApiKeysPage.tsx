@@ -94,10 +94,10 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">API Keys</h1>
-          <p className="text-slate-400 text-sm mt-1.5 font-medium">Manage your API keys and access tokens</p>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-claude-text dark:text-claude-dark-text">API Keys</h1>
+          <p className="text-claude-text-muted dark:text-claude-dark-text-muted dark:text-claude-dark-text-muted text-sm mt-1.5 font-medium">Manage your API keys and access tokens</p>
         </div>
-        <button type="button" onClick={handleCreateKey} className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg shadow-emerald-500/25">
+        <button type="button" onClick={handleCreateKey} className="flex items-center gap-2 bg-gradient-to-r from-claude-terracotta to-claude-terracotta hover:from-claude-terracotta-dark hover:to-claude-terracotta-dark active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg shadow-claude-terracotta/25">
           <Icons.Plus />
           Create New Key
         </button>
@@ -108,14 +108,14 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
           title="No API keys yet"
           description="Generate your first key to start sending requests."
           action={
-            <button type="button" onClick={handleCreateKey} className="bg-emerald-500/20 text-emerald-300 px-4 py-2 rounded-lg text-sm font-medium">
+            <button type="button" onClick={handleCreateKey} className="bg-claude-terracotta/10 text-claude-terracotta px-4 py-2 rounded-lg text-sm font-medium">
               Create key
             </button>
           }
         />
       ) : (
         <>
-          <div className="glass-card glass-border rounded-2xl p-4">
+          <div className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border dark:border-claude-dark-border rounded-2xl p-4">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex-1 min-w-[200px] relative">
                 <label htmlFor="api-key-search" className="sr-only">Search API keys</label>
@@ -125,17 +125,17 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
                   placeholder="Search by name or key..."
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  className="w-full bg-slate-800/50 text-white pl-10 pr-4 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500/50 focus:outline-none placeholder-slate-500"
+                  className="w-full bg-claude-beige dark:bg-claude-dark-surface-hover text-claude-text dark:text-claude-dark-text pl-10 pr-4 py-2.5 rounded-xl border border-claude-border dark:border-claude-dark-border focus:border-claude-terracotta/50 focus:outline-none placeholder-claude-text-muted"
                 />
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><Icons.Search /></div>
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-claude-text-muted dark:text-claude-dark-text-muted"><Icons.Search /></div>
               </div>
-              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | 'active' | 'inactive')} className="bg-slate-800/50 text-slate-200 px-4 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500/50 focus:outline-none">
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | 'active' | 'inactive')} className="bg-claude-beige dark:bg-claude-dark-surface-hover text-claude-text dark:text-claude-dark-text px-4 py-2.5 rounded-xl border border-claude-border dark:border-claude-dark-border focus:border-claude-terracotta/50 focus:outline-none">
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
               {hasFilters && (
-                <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="text-sm text-slate-400 hover:text-white transition-colors">
+                <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="text-sm text-claude-text dark:text-claude-dark-text-muted dark:text-claude-dark-text-muted hover:text-claude-text transition-colors">
                   Clear filters
                 </button>
               )}
@@ -146,26 +146,26 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
               title="No keys match your filters"
               description="Try adjusting your search or filters."
               action={hasFilters ? (
-                <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="bg-emerald-500/20 text-emerald-300 px-4 py-2 rounded-lg text-sm font-medium">
+                <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="bg-claude-terracotta/10 text-claude-terracotta px-4 py-2 rounded-lg text-sm font-medium">
                   Clear filters
                 </button>
               ) : undefined}
             />
           ) : (
-        <div className="glass-card glass-border rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border dark:border-claude-dark-border rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Name</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Key</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Usage</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Last Used</th>
-                  <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Status</th>
-                  <th className="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-4">Actions</th>
+                <tr className="border-b border-claude-border dark:border-claude-dark-border">
+                  <th className="text-left text-xs font-medium text-claude-text-muted dark:text-claude-dark-text-muted uppercase tracking-wider px-6 py-4">Name</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted dark:text-claude-dark-text-muted uppercase tracking-wider px-6 py-4">Key</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted dark:text-claude-dark-text-muted uppercase tracking-wider px-6 py-4">Usage</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted dark:text-claude-dark-text-muted uppercase tracking-wider px-6 py-4">Last Used</th>
+                  <th className="text-left text-xs font-medium text-claude-text-muted dark:text-claude-dark-text-muted uppercase tracking-wider px-6 py-4">Status</th>
+                  <th className="text-right text-xs font-medium text-claude-text-muted dark:text-claude-dark-text-muted uppercase tracking-wider px-6 py-4">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody className="divide-y divide-claude-border">
                 {filteredKeys.map((apiKey) => {
                   const status = copyStatus?.key === apiKey.key ? copyStatus.status : null;
                   const CopyIcon = status === 'success'
@@ -174,14 +174,14 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
                       ? Icons.Warning
                       : Icons.Copy;
                   const copyTone = status === 'success'
-                    ? 'text-emerald-400'
+                    ? 'text-emerald-600'
                     : status === 'error'
-                      ? 'text-red-400'
+                      ? 'text-red-600'
                       : status === 'unavailable'
-                        ? 'text-amber-400'
+                        ? 'text-amber-600'
                         : copySupported
-                          ? 'text-slate-400 hover:text-white'
-                          : 'text-slate-500 hover:text-slate-400';
+                          ? 'text-claude-text-muted dark:text-claude-dark-text-muted hover:text-claude-text'
+                          : 'text-claude-border hover:text-claude-text-muted dark:text-claude-dark-text-muted';
                   const copyTitle = !copySupported
                     ? 'Clipboard copy unavailable in this context'
                     : status === 'success'
@@ -189,20 +189,20 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
                       : 'Copy to clipboard';
 
                   return (
-                    <tr key={apiKey.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={apiKey.id} className="hover:bg-claude-beige dark:hover:bg-claude-dark-surface-hover/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="text-white font-medium">{apiKey.name}</div>
-                        <div className="text-xs text-slate-500">Created {apiKey.created}</div>
+                        <div className="text-claude-text dark:text-claude-dark-text font-medium">{apiKey.name}</div>
+                        <div className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Created {apiKey.created}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <code className="text-sm text-slate-300 font-mono bg-slate-800/50 px-2 py-1 rounded">
+                          <code className="text-sm text-claude-text dark:text-claude-dark-text-muted dark:text-claude-dark-text-muted font-mono bg-claude-beige px-2 py-1 rounded">
                             {showKey[apiKey.id] ? 'sk-ant-api03-xxxx...full-key-here' : apiKey.key}
                           </code>
                           <button
                             type="button"
                             onClick={() => setShowKey({ ...showKey, [apiKey.id]: !showKey[apiKey.id] })}
-                            className="p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-claude-beige dark:hover:bg-claude-dark-surface-hover dark:bg-claude-dark-surface-hover text-claude-text dark:text-claude-dark-text-muted dark:text-claude-dark-text-muted hover:text-claude-text transition-colors"
                             aria-pressed={!!showKey[apiKey.id]}
                             aria-label={showKey[apiKey.id] ? 'Hide key' : 'Reveal key'}
                           >
@@ -211,26 +211,26 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
                           <button
                             type="button"
                             onClick={() => handleCopy(apiKey.key)}
-                            className={`p-1.5 rounded-lg transition-colors ${copySupported ? 'hover:bg-white/[0.06]' : 'cursor-not-allowed hover:bg-white/[0.02]'} ${copyTone}`}
+                            className={`p-1.5 rounded-lg transition-colors ${copySupported ? 'hover:bg-claude-beige dark:hover:bg-claude-dark-surface-hover' : 'cursor-not-allowed hover:bg-claude-beige dark:hover:bg-claude-dark-surface-hover/50'} ${copyTone}`}
                             title={copyTitle}
                             aria-label="Copy key"
                           >
                             <CopyIcon />
                           </button>
                           {status && (
-                            <span className={`text-xs font-medium ${status === 'success' ? 'text-emerald-400' : status === 'unavailable' ? 'text-amber-400' : 'text-red-400'}`}>
+                            <span className={`text-xs font-medium ${status === 'success' ? 'text-emerald-600' : status === 'unavailable' ? 'text-amber-600' : 'text-red-600'}`}>
                               {status === 'success' ? 'Copied' : status === 'unavailable' ? 'Unavailable' : 'Failed'}
                             </span>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-white font-medium tabular-nums">{formatNumber(apiKey.usage)}</div>
-                        <div className="text-xs text-slate-500">tokens</div>
+                        <div className="text-claude-text dark:text-claude-dark-text font-medium tabular-nums">{formatNumber(apiKey.usage)}</div>
+                        <div className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">tokens</div>
                       </td>
-                      <td className="px-6 py-4 text-slate-300">{apiKey.lastUsed}</td>
+                      <td className="px-6 py-4 text-claude-text-muted dark:text-claude-dark-text-muted">{apiKey.lastUsed}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${apiKey.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${apiKey.status === 'active' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-claude-beige dark:bg-claude-dark-surface-hover text-claude-text dark:text-claude-dark-text-muted dark:text-claude-dark-text-muted'}`}>
                           {apiKey.status}
                         </span>
                       </td>
@@ -238,7 +238,7 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
                         <button
                           type="button"
                           onClick={() => handleDeleteKey(apiKey.name)}
-                          className="p-2 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-colors"
+                          className="p-2 rounded-lg hover:bg-red-500/10 text-claude-text-muted dark:text-claude-dark-text-muted hover:text-red-600 transition-colors"
                           aria-label={`Delete ${apiKey.name}`}
                         >
                           <Icons.Trash />
@@ -250,9 +250,9 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.06] text-sm text-slate-400">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-claude-border dark:border-claude-dark-border text-sm text-claude-text dark:text-claude-dark-text-muted dark:text-claude-dark-text-muted">
             <span>Showing {filteredKeys.length} of {apiKeys.length} keys</span>
-            {hasFilters && <span className="text-xs text-slate-500">Filters active</span>}
+            {hasFilters && <span className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted">Filters active</span>}
           </div>
         </div>
           )}

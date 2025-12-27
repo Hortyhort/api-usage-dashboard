@@ -5,8 +5,28 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
+      colors: {
+        claude: {
+          cream: '#FAF8F3',
+          beige: '#F5F0E8',
+          'beige-dark': '#E8E0D4',
+          terracotta: '#DA7756',
+          'terracotta-dark': '#C75B39',
+          text: '#2D2A26',
+          'text-muted': '#6B6560',
+          border: '#E0D8CC',
+          // Dark mode colors
+          'dark-bg': '#1C1917',
+          'dark-surface': '#292524',
+          'dark-surface-hover': '#3D3835',
+          'dark-border': '#44403C',
+          'dark-text': '#FAFAF9',
+          'dark-text-muted': '#A8A29E',
+        },
+      },
       fontFamily: {
         sans: [
           'Inter',
@@ -23,22 +43,15 @@ module.exports = {
         '3xl': '64px',
       },
       boxShadow: {
-        // Layered glass shadows for depth
+        'claude': '0 1px 3px rgba(0, 0, 0, 0.04)',
+        'claude-md': '0 4px 12px rgba(0, 0, 0, 0.06)',
+        'claude-lg': '0 8px 24px rgba(0, 0, 0, 0.08)',
         'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
         'glass-lg': '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
         'glass-xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 15px rgba(0, 0, 0, 0.1)',
-        // Colored ambient glow shadows
-        'glow-blue': '0 0 40px -10px rgba(59, 130, 246, 0.4)',
-        'glow-emerald': '0 0 40px -10px rgba(16, 185, 129, 0.4)',
-        'glow-violet': '0 0 40px -10px rgba(139, 92, 246, 0.4)',
-        'glow-amber': '0 0 40px -10px rgba(245, 158, 11, 0.4)',
-        'glow-cyan': '0 0 40px -10px rgba(6, 182, 212, 0.4)',
-        'glow-green': '0 0 40px -10px rgba(34, 197, 94, 0.4)',
-        'glow-red': '0 0 40px -10px rgba(239, 68, 68, 0.4)',
-        // Inner glow for cards
+        'glow-terracotta': '0 0 40px -10px rgba(218, 119, 86, 0.4)',
         'inner-glow': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.05)',
-        // macOS-style tooltip shadow
-        'tooltip': '0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+        'tooltip': '0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
@@ -75,7 +88,7 @@ module.exports = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'glass-gradient': 'linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent)',
-        'shimmer': 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent)',
+        'shimmer': 'linear-gradient(90deg, transparent, rgba(218, 119, 86, 0.05), transparent)',
       },
     },
   },

@@ -13,10 +13,14 @@ pnpm-debug.log*
 
 # env files
 .env
+.env.local
 .env.*.local
 
 # coverage
 coverage/
+
+# local data
+.data/
 
 # misc
 .DS_Store

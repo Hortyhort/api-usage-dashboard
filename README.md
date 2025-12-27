@@ -24,6 +24,8 @@ Copy `.env.example` to `.env.local` and add auth settings:
 ```bash
 AUTH_SECRET=replace-with-a-long-random-string
 DASHBOARD_PASSWORD=replace-with-a-strong-passcode
+DASHBOARD_DATA_PATH=.data/usage.json
+SHARE_STORE_PATH=.data/share-links.json
 ```
 
 ```bash
@@ -54,10 +56,17 @@ Open `http://localhost:3000` in your browser.
 - `next.config.js`, `tailwind.config.js`, `postcss.config.js` Tooling config
 
 ## Data
-All metrics are mocked in `data/mockData.ts` and served through `pages/api/usage.ts`. Replace the mock data with API calls or server-side data fetching as needed.
+Usage data can come from a JSON file or a remote API:
+- `DASHBOARD_DATA_PATH` loads a local JSON file containing `DashboardData`.
+- `DASHBOARD_DATA_URL` fetches `DashboardData` from a backend endpoint (optional `DASHBOARD_DATA_TOKEN` for auth).
+
+If neither is set, the API falls back to `data/mockData.ts` for local development.
 
 ## Authentication
 The dashboard is private by default. Sign in with the `DASHBOARD_PASSWORD`, and use the Share button to generate read-only links with an expiration (and optional passcode).
+
+## Share Auditing (Optional)
+Set `SHARE_STORE_PATH` to a writable JSON file to keep a log of share links, last-used timestamps, and revocations.
 
 ## Contributing
 See `CONTRIBUTING.md`.

@@ -7,14 +7,18 @@ const BarChart = ({
   stacked,
   highlightDate,
   overlaySeries,
+  chartLabel = 'Daily usage chart',
 }: {
   data: DailyUsage[];
   stacked: boolean;
   highlightDate?: string;
   overlaySeries?: { label: string; values: number[]; color: string };
+  chartLabel?: string;
 }) => {
   const [tooltip, setTooltip] = useState<number | null>(null);
   const maxValue = Math.max(...data.map((day) => day.input + day.output), 0);
+  const totalInput = data.reduce((sum, d) => sum + d.input, 0);
+  const totalOutput = data.reduce((sum, d) => sum + d.output, 0);
   const overlayPoints = useMemo(() => {
     if (!overlaySeries || overlaySeries.values.length === 0 || maxValue === 0) return '';
     const pointCount = Math.min(overlaySeries.values.length, data.length);
@@ -28,10 +32,17 @@ const BarChart = ({
     return points.join(' ');
   }, [overlaySeries, data.length, maxValue]);
 
+  // Accessible summary
+  const chartDescription = useMemo(() => {
+    if (!data.length) return 'No usage data available';
+    return `${chartLabel} showing ${data.length} days of data. Total input tokens: ${formatNumber(totalInput)}. Total output tokens: ${formatNumber(totalOutput)}. Combined total: ${formatNumber(totalInput + totalOutput)}.`;
+  }, [data.length, chartLabel, totalInput, totalOutput]);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" role="figure" aria-label={chartLabel}>
+      <span className="sr-only">{chartDescription}</span>
       <div className="relative h-48">
-        <div className="flex items-end gap-2 sm:gap-3 h-48 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex items-end gap-2 sm:gap-3 h-48 overflow-x-auto pb-2 scrollbar-hide" role="list" aria-label="Daily usage bars">
           {data.map((day, index) => {
             const total = day.input + day.output;
             const totalPct = maxValue > 0 ? (total / maxValue) * 100 : 0;
@@ -46,25 +57,26 @@ const BarChart = ({
                 onFocus={() => setTooltip(index)}
                 onBlur={() => setTooltip(null)}
                 tabIndex={0}
-                aria-label={`${day.label}: ${formatNumber(day.input)} input, ${formatNumber(day.output)} output`}
+                role="listitem"
+                aria-label={`${day.label}: ${formatNumber(day.input)} input tokens, ${formatNumber(day.output)} output tokens, ${formatNumber(total)} total`}
               >
                 {tooltip === index && (
-                  <div className="absolute bottom-full mb-3 glass-card rounded-xl p-4 z-20 whitespace-nowrap shadow-tooltip animate-scale-in border border-white/10">
+                  <div className="absolute bottom-full mb-3 bg-white rounded-xl p-4 z-20 whitespace-nowrap shadow-claude-lg animate-scale-in border border-claude-border">
                     <div className="relative z-10">
-                      <div className="font-semibold text-white mb-2">{day.label}</div>
+                      <div className="font-semibold text-claude-text mb-2">{day.label}</div>
                       <div className="flex items-center gap-3 mb-1.5">
-                        <span className="w-2.5 h-2.5 bg-blue-400 rounded-sm"></span>
-                        <span className="text-slate-400 text-sm">Input:</span>
-                        <span className="text-white font-medium tabular-nums">{formatNumber(day.input)}</span>
+                        <span className="w-2.5 h-2.5 bg-claude-terracotta rounded-sm"></span>
+                        <span className="text-claude-text-muted text-sm">Input:</span>
+                        <span className="text-claude-text font-medium tabular-nums">{formatNumber(day.input)}</span>
                       </div>
                       <div className="flex items-center gap-3 mb-1.5">
-                        <span className="w-2.5 h-2.5 bg-emerald-400 rounded-sm"></span>
-                        <span className="text-slate-400 text-sm">Output:</span>
-                        <span className="text-white font-medium tabular-nums">{formatNumber(day.output)}</span>
+                        <span className="w-2.5 h-2.5 bg-claude-terracotta-dark rounded-sm"></span>
+                        <span className="text-claude-text-muted text-sm">Output:</span>
+                        <span className="text-claude-text font-medium tabular-nums">{formatNumber(day.output)}</span>
                       </div>
-                      <div className="border-t border-white/10 mt-3 pt-3">
-                        <span className="text-slate-400 text-sm">Total:</span>
-                        <span className="text-white font-semibold ml-2 tabular-nums">{formatNumber(total)}</span>
+                      <div className="border-t border-claude-border mt-3 pt-3">
+                        <span className="text-claude-text-muted text-sm">Total:</span>
+                        <span className="text-claude-text font-semibold ml-2 tabular-nums">{formatNumber(total)}</span>
                       </div>
                     </div>
                   </div>
@@ -73,17 +85,17 @@ const BarChart = ({
                   <div style={{ flexGrow: 100 - totalPct }} />
                   {stacked ? (
                     <div className="w-full flex flex-col rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105" style={{ flexGrow: totalPct }}>
-                      <div className={`w-full transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-blue-500 to-blue-400 shadow-lg shadow-blue-500/40' : 'bg-blue-500/70 group-hover:bg-blue-500'}`} style={{ flexGrow: day.input }} />
-                      <div className={`w-full transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-emerald-500 to-emerald-400 shadow-lg shadow-emerald-500/40' : 'bg-emerald-500/70 group-hover:bg-emerald-500'}`} style={{ flexGrow: day.output }} />
+                      <div className={`w-full transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-claude-terracotta to-claude-terracotta shadow-lg shadow-claude-terracotta/40' : 'bg-claude-terracotta/70 group-hover:bg-claude-terracotta'}`} style={{ flexGrow: day.input }} />
+                      <div className={`w-full transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-claude-terracotta-dark to-claude-terracotta-dark shadow-lg shadow-claude-terracotta-dark/40' : 'bg-claude-terracotta-dark/70 group-hover:bg-claude-terracotta-dark'}`} style={{ flexGrow: day.output }} />
                     </div>
                   ) : (
                     <div className="w-full flex flex-col gap-1" style={{ flexGrow: totalPct }}>
-                      <div className={`w-full rounded-lg transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-blue-500 to-blue-400 shadow-lg shadow-blue-500/30' : 'bg-blue-500/70 group-hover:bg-blue-500'}`} style={{ flexGrow: day.input }} />
-                      <div className={`w-full rounded-lg transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-emerald-500 to-emerald-400 shadow-lg shadow-emerald-500/30' : 'bg-emerald-500/70 group-hover:bg-emerald-500'}`} style={{ flexGrow: day.output }} />
+                      <div className={`w-full rounded-lg transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-claude-terracotta to-claude-terracotta shadow-lg shadow-claude-terracotta/30' : 'bg-claude-terracotta/70 group-hover:bg-claude-terracotta'}`} style={{ flexGrow: day.input }} />
+                      <div className={`w-full rounded-lg transition-all duration-300 ${isCurrent ? 'bg-gradient-to-t from-claude-terracotta-dark to-claude-terracotta-dark shadow-lg shadow-claude-terracotta-dark/30' : 'bg-claude-terracotta-dark/70 group-hover:bg-claude-terracotta-dark'}`} style={{ flexGrow: day.output }} />
                     </div>
                   )}
                 </div>
-                <div className={`text-xs font-medium ${isCurrent ? 'text-white' : 'text-slate-500'} transition-colors`}>{day.label}</div>
+                <div className={`text-xs font-medium ${isCurrent ? 'text-claude-text' : 'text-claude-text-muted'} transition-colors`}>{day.label}</div>
               </div>
             );
           })}
@@ -104,12 +116,12 @@ const BarChart = ({
       </div>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2.5">
-          <div className="w-3 h-3 bg-gradient-to-br from-blue-400 to-blue-500 rounded-sm shadow-sm shadow-blue-500/30" />
-          <span className="text-sm text-slate-400 font-medium">Input tokens</span>
+          <div className="w-3 h-3 bg-gradient-to-br from-claude-terracotta to-claude-terracotta rounded-sm shadow-sm shadow-claude-terracotta/30" />
+          <span className="text-sm text-claude-text-muted font-medium">Input tokens</span>
         </div>
         <div className="flex items-center gap-2.5">
-          <div className="w-3 h-3 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-sm shadow-sm shadow-emerald-500/30" />
-          <span className="text-sm text-slate-400 font-medium">Output tokens</span>
+          <div className="w-3 h-3 bg-gradient-to-br from-claude-terracotta-dark to-claude-terracotta-dark rounded-sm shadow-sm shadow-claude-terracotta-dark/30" />
+          <span className="text-sm text-claude-text-muted font-medium">Output tokens</span>
         </div>
       </div>
     </div>

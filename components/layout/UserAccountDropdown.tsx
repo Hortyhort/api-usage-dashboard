@@ -33,17 +33,17 @@ const UserAccountDropdown = ({ user, isOpen, dropdownRef, onLogout }: { user: Us
   ];
 
   return (
-    <div ref={dropdownRef} className="absolute bottom-full left-0 mb-2 w-64 glass-card rounded-xl border border-white/10 shadow-2xl shadow-black/50 animate-scale-in origin-bottom-left overflow-hidden z-50" role="menu">
+    <div ref={dropdownRef} className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-xl border border-claude-border shadow-claude-lg animate-scale-in origin-bottom-left overflow-hidden z-50" role="menu">
       <div className="py-1.5">
         {menuItems.map((item, i) => {
-          if (item.type === 'header') return <div key={i} className="px-4 py-2.5"><div className="text-sm text-slate-300 font-medium truncate">{item.email}</div></div>;
-          if (item.type === 'divider') return <div key={i} className="my-1.5 border-t border-white/[0.06]" />;
+          if (item.type === 'header') return <div key={i} className="px-4 py-2.5"><div className="text-sm text-claude-text font-medium truncate">{item.email}</div></div>;
+          if (item.type === 'divider') return <div key={i} className="my-1.5 border-t border-claude-border" />;
           if ('icon' in item) {
             return (
-              <button key={i} type="button" onClick={item.onClick} className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors" role="menuitem">
+              <button key={i} type="button" onClick={item.onClick} className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-claude-text-muted hover:text-claude-text hover:bg-claude-beige transition-colors" role="menuitem">
                 <item.icon />
                 <span className="flex-1 text-left">{item.label}</span>
-                {item.shortcut && <span className="text-xs text-slate-500 font-medium"><span className="text-slate-600 mr-0.5">&#8984;</span>{item.shortcut}</span>}
+                {item.shortcut && <span className="text-xs text-claude-text-muted font-medium"><span className="text-claude-text-muted mr-0.5">&#8984;</span>{item.shortcut}</span>}
                 {item.hasSubmenu && <Icons.ChevronRight />}
               </button>
             );

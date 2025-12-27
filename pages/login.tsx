@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import type { GetServerSideProps } from 'next';
@@ -33,7 +33,27 @@ export default function Login({ isConfigured }: LoginProps) {
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const router = useRouter();
+
+  // Fetch CSRF token on mount
+  const fetchCsrfToken = useCallback(async () => {
+    try {
+      const response = await fetch('/api/csrf');
+      if (response.ok) {
+        const data = await response.json() as { token: string };
+        setCsrfToken(data.token);
+      }
+    } catch {
+      // CSRF fetch failed, will be handled on submit
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isConfigured) {
+      fetchCsrfToken();
+    }
+  }, [isConfigured, fetchCsrfToken]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,14 +61,26 @@ export default function Login({ isConfigured }: LoginProps) {
     setStatus('loading');
     setMessage('');
     try {
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken;
+      }
       const response = await fetch('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ password }),
       });
       if (!response.ok) {
+        const data = await response.json().catch(() => ({})) as { error?: string };
         setStatus('error');
-        setMessage('Invalid passcode. Please try again.');
+        if (data.error === 'rate_limit_exceeded') {
+          setMessage('Too many attempts. Please wait before trying again.');
+        } else if (data.error === 'csrf_validation_failed') {
+          setMessage('Session expired. Refreshing...');
+          await fetchCsrfToken();
+        } else {
+          setMessage('Invalid passcode. Please try again.');
+        }
         return;
       }
       setStatus('idle');
@@ -65,42 +97,38 @@ export default function Login({ isConfigured }: LoginProps) {
         <title>Sign in | API Usage Dashboard</title>
         <meta name="description" content="Sign in to access your API usage dashboard" />
       </Head>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center p-6">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/3 -left-1/4 w-1/2 h-1/2 bg-blue-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-violet-500/10 rounded-full blur-3xl"></div>
-        </div>
-        <div className="relative z-10 w-full max-w-md glass-card glass-border rounded-2xl p-6">
-          <h1 className="text-2xl font-semibold">Sign in</h1>
-          <p className="text-sm text-slate-400 mt-2">Private access for your API usage metrics.</p>
+      <div className="min-h-screen bg-claude-cream dark:bg-claude-dark-bg text-claude-text dark:text-claude-dark-text dark:text-claude-dark-text flex items-center justify-center p-6">
+        <div className="relative z-10 w-full max-w-md bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-8 shadow-claude-md">
+          <h1 className="text-2xl font-semibold text-claude-text dark:text-claude-dark-text">Sign in</h1>
+          <p className="text-sm text-claude-text dark:text-claude-dark-text-muted mt-2">Private access for your API usage metrics.</p>
 
           {!isConfigured && (
-            <div className="mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+            <div className="mt-5 rounded-xl border border-claude-terracotta/40 bg-claude-terracotta/10 p-4 text-sm text-claude-terracotta-dark">
               <div className="font-medium">Setup required</div>
-              <p className="mt-2 text-xs text-amber-100">
-                Set <code className="font-mono">AUTH_SECRET</code> and <code className="font-mono">DASHBOARD_PASSWORD</code> in <code className="font-mono">.env.local</code> to enable sign in.
+              <p className="mt-2 text-xs text-claude-text dark:text-claude-dark-text-muted">
+                Set <code className="font-mono bg-claude-beige dark:bg-claude-dark-surface-hover px-1 rounded">AUTH_SECRET</code> and <code className="font-mono bg-claude-beige dark:bg-claude-dark-surface-hover px-1 rounded">DASHBOARD_PASSWORD</code> in <code className="font-mono bg-claude-beige dark:bg-claude-dark-surface-hover px-1 rounded">.env.local</code> to enable sign in.
               </p>
             </div>
           )}
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="password" className="text-xs text-slate-400 font-medium uppercase tracking-wider">Passcode</label>
+              <label htmlFor="password" className="text-xs text-claude-text dark:text-claude-dark-text-muted font-medium uppercase tracking-wider">Passcode</label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 disabled={!isConfigured}
-                className="mt-2 w-full bg-slate-800/60 text-white px-4 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-50"
+                className="mt-2 w-full bg-claude-beige dark:bg-claude-dark-surface-hover text-claude-text dark:text-claude-dark-text px-4 py-2.5 rounded-xl border border-claude-border focus:outline-none focus:ring-2 focus:ring-claude-terracotta/40 disabled:opacity-50 placeholder:text-claude-text dark:text-claude-dark-text-muted/60"
                 placeholder="Enter your dashboard passcode"
               />
             </div>
-            {message && <div className="text-xs text-red-400">{message}</div>}
+            {message && <div className="text-xs text-claude-terracotta-dark">{message}</div>}
             <button
               type="submit"
               disabled={status === 'loading' || !isConfigured}
-              className={`w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${status === 'loading' || !isConfigured ? 'bg-slate-800/40 text-slate-500 cursor-not-allowed' : 'bg-blue-500/20 text-blue-200 hover:bg-blue-500/30'}`}
+              className={`w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${status === 'loading' || !isConfigured ? 'bg-claude-beige dark:bg-claude-dark-surface-hover-dark text-claude-text dark:text-claude-dark-text-muted cursor-not-allowed' : 'bg-claude-terracotta text-white hover:bg-claude-terracotta-dark'}`}
             >
               {status === 'loading' ? 'Signing in...' : 'Sign in'}
             </button>

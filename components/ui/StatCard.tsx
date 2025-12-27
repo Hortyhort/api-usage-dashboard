@@ -18,15 +18,15 @@ const StatCard = ({ title, value, subtitle, icon, color, trend, delay, tooltip, 
   sparklineColor?: string;
 }) => {
   const colors = {
-    blue: { icon: 'bg-blue-500/20 text-blue-400', glow: 'shadow-glow-blue' },
-    violet: { icon: 'bg-violet-500/20 text-violet-400', glow: 'shadow-glow-violet' },
-    emerald: { icon: 'bg-emerald-500/20 text-emerald-400', glow: 'shadow-glow-emerald' },
-    amber: { icon: 'bg-amber-500/20 text-amber-400', glow: 'shadow-glow-amber' },
-    red: { icon: 'bg-red-500/20 text-red-400', glow: 'shadow-glow-red' },
+    blue: { icon: 'bg-claude-terracotta/10 text-claude-terracotta', glow: 'shadow-glow-terracotta' },
+    violet: { icon: 'bg-claude-terracotta/15 text-claude-terracotta-dark', glow: 'shadow-glow-terracotta' },
+    emerald: { icon: 'bg-claude-terracotta/10 text-claude-terracotta', glow: 'shadow-glow-terracotta' },
+    amber: { icon: 'bg-claude-terracotta/15 text-claude-terracotta-dark', glow: 'shadow-glow-terracotta' },
+    red: { icon: 'bg-claude-terracotta-dark/20 text-claude-terracotta-dark', glow: 'shadow-glow-terracotta' },
   } as const;
 
   return (
-    <div className={`group glass-card glass-border rounded-2xl p-4 sm:p-5 transition-all duration-300 ease-out-expo hover:scale-[1.02] active:scale-[0.98] hover:bg-white/[0.03] ${colors[color].glow} animate-slide-up`} style={{ animationDelay: `${delay ?? 0}ms` }}>
+    <div className={`group bg-white dark:bg-claude-dark-surface border border-claude-border dark:border-claude-dark-border rounded-2xl p-4 sm:p-5 transition-all duration-300 ease-out-expo hover:scale-[1.02] active:scale-[0.98] hover:shadow-claude-md dark:hover:shadow-lg dark:hover:shadow-black/20 animate-slide-up`} style={{ animationDelay: `${delay ?? 0}ms` }}>
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -35,27 +35,27 @@ const StatCard = ({ title, value, subtitle, icon, color, trend, delay, tooltip, 
             </div>
             {tooltip ? (
               <Tooltip label={tooltip}>
-                <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</span>
+                <span className="text-claude-text-muted dark:text-claude-dark-text-muted text-xs font-medium uppercase tracking-wider">{title}</span>
               </Tooltip>
             ) : (
-              <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</span>
+              <span className="text-claude-text-muted dark:text-claude-dark-text-muted text-xs font-medium uppercase tracking-wider">{title}</span>
             )}
           </div>
           {typeof trend === 'number' && (
-            <div className={`flex items-center gap-1 text-xs font-medium ${trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <div className={`flex items-center gap-1 text-xs font-medium ${trend > 0 ? 'text-claude-terracotta' : 'text-claude-terracotta-dark'}`}>
               {trend > 0 ? <Icons.TrendUp /> : <Icons.TrendDown />}
               <span>{Math.abs(trend)}%</span>
             </div>
           )}
         </div>
-        <div className="text-2xl sm:text-3xl font-semibold text-white tabular-nums tracking-tight">
+        <div className="text-2xl sm:text-3xl font-semibold text-claude-text dark:text-claude-dark-text tabular-nums tracking-tight">
           {copyValue ? (
             <CopyableValue display={value} value={copyValue} label={copyLabel ?? title} />
           ) : (
             value
           )}
         </div>
-        {subtitle && <div className="text-xs text-slate-500 mt-1.5 font-medium">{subtitle}</div>}
+        {subtitle && <div className="text-xs text-claude-text-muted dark:text-claude-dark-text-muted mt-1.5 font-medium">{subtitle}</div>}
         {sparkline && sparkline.length > 1 && (
           <svg className="mt-3 h-8 w-full" viewBox="0 0 100 30" preserveAspectRatio="none">
             <polyline
@@ -68,7 +68,7 @@ const StatCard = ({ title, value, subtitle, icon, color, trend, delay, tooltip, 
                 return `${x},${y}`;
               }).join(' ')}
               fill="none"
-              stroke={sparklineColor ?? '#60a5fa'}
+              stroke={sparklineColor ?? '#DA7756'}
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"

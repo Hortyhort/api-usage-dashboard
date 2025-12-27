@@ -9,7 +9,7 @@ Thanks for taking the time to contribute.
 
 ## Pull Requests
 - Keep changes focused and describe the intent clearly.
-- Run `npm run build` before submitting.
+- Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run format:check`, and `npm run build` before submitting.
 - For UI changes, include before/after screenshots or a short GIF.
 - Update or add documentation when it helps reviewers.
 

@@ -34,6 +34,7 @@ module.exports = {
         'glow-amber': '0 0 40px -10px rgba(245, 158, 11, 0.4)',
         'glow-cyan': '0 0 40px -10px rgba(6, 182, 212, 0.4)',
         'glow-green': '0 0 40px -10px rgba(34, 197, 94, 0.4)',
+        'glow-red': '0 0 40px -10px rgba(239, 68, 68, 0.4)',
         // Inner glow for cards
         'inner-glow': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.05)',
         // macOS-style tooltip shadow

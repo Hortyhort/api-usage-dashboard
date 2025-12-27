@@ -1,6 +1,6 @@
 # API Usage Dashboard
 
-A Next.js + Tailwind CSS dashboard UI for visualizing API usage, costs, alerts, and team activity. The current build uses mock data in `pages/index.js` and is intended as a front-end template.
+A Next.js + Tailwind CSS dashboard UI for visualizing API usage, costs, alerts, and team activity. The current build uses mock data in `data/mockData.ts` and is intended as a front-end template.
 
 ## Features
 - KPI cards for tokens, requests, cost, and cache metrics
@@ -28,15 +28,24 @@ Open `http://localhost:3000` in your browser.
 - `npm run dev` Start the dev server
 - `npm run build` Build for production
 - `npm run start` Run the production server
+- `npm run lint` Run ESLint
+- `npm run typecheck` Run TypeScript type checks
+- `npm run test` Run unit tests
+- `npm run format` Format files with Prettier
+- `npm run format:check` Check formatting with Prettier
 
 ## Project Structure
-- `pages/index.js` Dashboard UI and mock data
-- `pages/_app.js` App wrapper
+- `pages/index.tsx` Dashboard UI shell and routing
+- `pages/api/usage.ts` Mock API endpoint for dashboard data
+- `components/` Reusable UI and page sections
+- `data/mockData.ts` Mock dashboard dataset
+- `lib/` Helpers, formatters, and API helpers
+- `types/` Shared TypeScript types
 - `styles/` Global styles and Tailwind base
 - `next.config.js`, `tailwind.config.js`, `postcss.config.js` Tooling config
 
 ## Data
-All metrics are mocked in `pages/index.js`. Replace the mock data with API calls or server-side data fetching as needed.
+All metrics are mocked in `data/mockData.ts` and served through `pages/api/usage.ts`. Replace the mock data with API calls or server-side data fetching as needed.
 
 ## Contributing
 See `CONTRIBUTING.md`.

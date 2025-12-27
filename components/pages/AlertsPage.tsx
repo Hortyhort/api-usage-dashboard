@@ -1,14 +1,66 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Alert } from '../../types/dashboard';
 import { Icons } from '../icons';
 import EmptyState from '../ui/EmptyState';
 
-const AlertsPage = ({ alerts, onMarkRead, onMarkAllRead }: { alerts: Alert[]; onMarkRead: (id: number) => void; onMarkAllRead: () => void }) => {
+const STORAGE_KEY = 'api-usage-dashboard:alert-thresholds';
+const DEFAULT_THRESHOLDS = { budget: 80, rateLimit: 90, spike: 50 };
+
+const AlertsPage = ({ alerts, onMarkRead, onMarkAllRead, isClient }: { alerts: Alert[]; onMarkRead: (id: number) => void; onMarkAllRead: () => void; isClient: boolean }) => {
   const alertStyles = {
     warning: { bg: 'bg-amber-500/10', border: 'border-l-amber-500', icon: Icons.Warning, iconBg: 'bg-amber-500/20 text-amber-400' },
     error: { bg: 'bg-red-500/10', border: 'border-l-red-500', icon: Icons.X, iconBg: 'bg-red-500/20 text-red-400' },
     success: { bg: 'bg-emerald-500/10', border: 'border-l-emerald-500', icon: Icons.Check, iconBg: 'bg-emerald-500/20 text-emerald-400' },
     info: { bg: 'bg-blue-500/10', border: 'border-l-blue-500', icon: Icons.Info, iconBg: 'bg-blue-500/20 text-blue-400' },
   } as const;
+
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didHydrateRef = useRef(false);
+
+  useEffect(() => {
+    if (!isClient) return;
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as typeof DEFAULT_THRESHOLDS;
+        setThresholds({ ...DEFAULT_THRESHOLDS, ...parsed });
+      } catch (error) {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+    didHydrateRef.current = true;
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!isClient || !didHydrateRef.current) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+    setSaveStatus('saving');
+    saveTimeoutRef.current = setTimeout(() => {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(thresholds));
+      setSaveStatus('saved');
+      resetTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 1500);
+    }, 400);
+  }, [thresholds, isClient]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+    };
+  }, []);
+
+  const unreadCount = alerts.filter((alert) => !alert.read).length;
+  const visibleAlerts = useMemo(() => {
+    if (filter === 'unread') {
+      return alerts.filter((alert) => !alert.read);
+    }
+    return alerts;
+  }, [alerts, filter]);
 
   const hasUnread = alerts.some((alert) => !alert.read);
 
@@ -19,44 +71,87 @@ const AlertsPage = ({ alerts, onMarkRead, onMarkAllRead }: { alerts: Alert[]; on
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">Alerts</h1>
           <p className="text-slate-400 text-sm mt-1.5 font-medium">Stay informed about your API usage</p>
         </div>
-        <button type="button" onClick={onMarkAllRead} disabled={!hasUnread} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${hasUnread ? 'text-slate-400 hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 cursor-not-allowed'}`}>
-          <Icons.Check />
-          Mark all as read
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 bg-white/[0.04] p-1 rounded-lg">
+            <button type="button" onClick={() => setFilter('all')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${filter === 'all' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300 hover:bg-white/5'}`}>
+              All ({alerts.length})
+            </button>
+            <button type="button" onClick={() => setFilter('unread')} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${filter === 'unread' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-slate-300 hover:bg-white/5'}`}>
+              Unread ({unreadCount})
+            </button>
+          </div>
+          <button type="button" onClick={onMarkAllRead} disabled={!hasUnread} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${hasUnread ? 'text-slate-400 hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 cursor-not-allowed'}`}>
+            <Icons.Check />
+            Mark all as read
+          </button>
+        </div>
       </div>
 
       <div className="glass-card glass-border rounded-2xl p-5">
-        <h3 className="text-white font-medium mb-4">Alert Thresholds</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white font-medium">Alert Thresholds</h3>
+          <div className="flex items-center gap-3 text-xs text-slate-400">
+            {saveStatus === 'saving' && <span className="animate-pulse">Saving...</span>}
+            {saveStatus === 'saved' && <span className="text-emerald-400">Saved</span>}
+            <button type="button" onClick={() => setThresholds(DEFAULT_THRESHOLDS)} className="text-slate-400 hover:text-white transition-colors">
+              Reset defaults
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label htmlFor="budget-warning" className="text-xs text-slate-400 font-medium uppercase tracking-wider">Budget Warning</label>
             <div className="mt-2 flex items-center gap-2">
-              <input id="budget-warning" type="number" defaultValue="80" className="w-20 bg-slate-800/50 text-white px-3 py-2 rounded-lg border border-white/10 focus:border-blue-500/50 focus:outline-none" />
+              <input
+                id="budget-warning"
+                type="number"
+                min={1}
+                max={100}
+                value={thresholds.budget}
+                onChange={(event) => setThresholds((prev) => ({ ...prev, budget: Number(event.target.value) }))}
+                className="w-20 bg-slate-800/50 text-white px-3 py-2 rounded-lg border border-white/10 focus:border-blue-500/50 focus:outline-none"
+              />
               <span className="text-slate-400">%</span>
             </div>
           </div>
           <div>
             <label htmlFor="rate-limit-warning" className="text-xs text-slate-400 font-medium uppercase tracking-wider">Rate Limit Warning</label>
             <div className="mt-2 flex items-center gap-2">
-              <input id="rate-limit-warning" type="number" defaultValue="90" className="w-20 bg-slate-800/50 text-white px-3 py-2 rounded-lg border border-white/10 focus:border-blue-500/50 focus:outline-none" />
+              <input
+                id="rate-limit-warning"
+                type="number"
+                min={1}
+                max={100}
+                value={thresholds.rateLimit}
+                onChange={(event) => setThresholds((prev) => ({ ...prev, rateLimit: Number(event.target.value) }))}
+                className="w-20 bg-slate-800/50 text-white px-3 py-2 rounded-lg border border-white/10 focus:border-blue-500/50 focus:outline-none"
+              />
               <span className="text-slate-400">%</span>
             </div>
           </div>
           <div>
             <label htmlFor="usage-spike" className="text-xs text-slate-400 font-medium uppercase tracking-wider">Usage Spike</label>
             <div className="mt-2 flex items-center gap-2">
-              <input id="usage-spike" type="number" defaultValue="50" className="w-20 bg-slate-800/50 text-white px-3 py-2 rounded-lg border border-white/10 focus:border-blue-500/50 focus:outline-none" />
+              <input
+                id="usage-spike"
+                type="number"
+                min={1}
+                max={300}
+                value={thresholds.spike}
+                onChange={(event) => setThresholds((prev) => ({ ...prev, spike: Number(event.target.value) }))}
+                className="w-20 bg-slate-800/50 text-white px-3 py-2 rounded-lg border border-white/10 focus:border-blue-500/50 focus:outline-none"
+              />
               <span className="text-slate-400">% increase</span>
             </div>
           </div>
         </div>
       </div>
 
-      {alerts.length === 0 ? (
-        <EmptyState title="No alerts" description="You are all caught up. We'll notify you when something needs attention." />
+      {visibleAlerts.length === 0 ? (
+        <EmptyState title={filter === 'unread' ? 'No unread alerts' : 'No alerts'} description="You are all caught up. We'll notify you when something needs attention." />
       ) : (
         <div className="space-y-3">
-          {alerts.map((alert) => {
+          {visibleAlerts.map((alert) => {
             const style = alertStyles[alert.type];
             return (
               <div key={alert.id} className={`glass-card glass-border rounded-2xl p-4 border-l-4 ${style.border} ${!alert.read ? style.bg : ''} transition-all duration-200`}>

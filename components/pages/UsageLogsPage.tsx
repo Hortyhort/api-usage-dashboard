@@ -4,6 +4,7 @@ import { Icons } from '../icons';
 import { formatModelName } from '../../lib/formatters';
 import EmptyState from '../ui/EmptyState';
 import { useToast } from '../ui/ToastProvider';
+import UsageLogDrawer from './UsageLogDrawer';
 
 const STORAGE_KEY = 'api-usage-dashboard:usage-log-filters';
 
@@ -12,6 +13,7 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
   const [modelFilter, setModelFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
+  const [selectedLog, setSelectedLog] = useState<UsageLog | null>(null);
   const pageSize = 6;
   const { addToast } = useToast();
 
@@ -50,6 +52,7 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
   const currentPage = Math.min(page, totalPages);
   const pagedLogs = filteredLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const hasFilters = search || modelFilter !== 'all' || statusFilter !== 'all';
+  const activeFilterCount = [search, modelFilter !== 'all', statusFilter !== 'all'].filter(Boolean).length;
 
   useEffect(() => {
     if (page !== currentPage) {
@@ -58,10 +61,52 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
   }, [currentPage, page]);
 
   const handleExport = () => {
+    if (!isClient) {
+      addToast({
+        title: 'Export unavailable',
+        description: 'Exports are available in the browser only.',
+        variant: 'warning',
+      });
+      return;
+    }
+    if (filteredLogs.length === 0) {
+      addToast({
+        title: 'Nothing to export',
+        description: 'Adjust your filters to include data.',
+        variant: 'info',
+      });
+      return;
+    }
+
+    const headers = ['Timestamp', 'Model', 'Input Tokens', 'Output Tokens', 'Latency', 'API Key', 'Status'];
+    const escapeValue = (value: string | number) => {
+      const stringValue = String(value);
+      return /[",\n]/.test(stringValue) ? `"${stringValue.replace(/"/g, '""')}"` : stringValue;
+    };
+    const rows = filteredLogs.map((log) => [
+      log.timestamp,
+      formatModelName(log.model),
+      log.inputTokens,
+      log.outputTokens,
+      log.latency,
+      log.apiKey,
+      log.status,
+    ]);
+    const csv = [headers.join(','), ...rows.map((row) => row.map(escapeValue).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `usage-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
     addToast({
-      title: 'Export queued',
-      description: 'Connect this action to your backend to generate a CSV.',
-      variant: 'info',
+      title: 'Export ready',
+      description: 'Your CSV download has started.',
+      variant: 'success',
     });
   };
 
@@ -78,7 +123,12 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">Usage Logs</h1>
           <p className="text-slate-400 text-sm mt-1.5 font-medium">Detailed request history and debugging</p>
         </div>
-        <button type="button" onClick={handleExport} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg shadow-blue-500/25">
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={!isClient || filteredLogs.length === 0}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg ${!isClient || filteredLogs.length === 0 ? 'bg-slate-800/40 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] text-white shadow-blue-500/25'}`}
+        >
           <Icons.Download />
           Export CSV
         </button>
@@ -110,9 +160,12 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
             <option value="error">Error</option>
           </select>
           {hasFilters && (
-            <button type="button" onClick={clearFilters} className="text-sm text-slate-400 hover:text-white transition-colors">
-              Clear filters
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500">{activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}</span>
+              <button type="button" onClick={clearFilters} className="text-sm text-slate-400 hover:text-white transition-colors">
+                Clear filters
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -135,7 +188,20 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
                 {pagedLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-white/[0.02] transition-colors cursor-pointer">
+                  <tr
+                    key={log.id}
+                    className="hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    onClick={() => setSelectedLog(log)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelectedLog(log);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View details for ${formatModelName(log.model)} request at ${log.timestamp}`}
+                  >
                     <td className="px-6 py-4 text-sm text-slate-300 font-mono">{log.timestamp}</td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-white font-medium">{formatModelName(log.model)}</span>
@@ -174,6 +240,7 @@ const UsageLogsPage = ({ usageLogs, isClient }: { usageLogs: UsageLog[]; isClien
           </div>
         </div>
       )}
+      <UsageLogDrawer log={selectedLog} isOpen={!!selectedLog} onClose={() => setSelectedLog(null)} isClient={isClient} />
     </div>
   );
 };

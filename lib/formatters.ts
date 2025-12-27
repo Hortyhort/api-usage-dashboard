@@ -26,3 +26,16 @@ export const clamp = (value: number, min: number, max: number) => Math.min(max, 
 export const getLatestUsageDate = (data: UsageData) => data.dailyUsage[data.dailyUsage.length - 1]?.date ?? '';
 
 export const formatModelName = (model: string) => model.split('-').slice(1).join(' ');
+
+export const formatRelativeTime = (timestamp: number | null) => {
+  if (!timestamp) return 'Not synced yet';
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if (diffSeconds < 10) return 'Just now';
+  if (diffSeconds < 60) return `${diffSeconds}s ago`;
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+};

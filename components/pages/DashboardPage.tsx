@@ -5,7 +5,7 @@ import StatCard from '../ui/StatCard';
 import ProgressBar from '../ui/ProgressBar';
 import BarChart from '../charts/BarChart';
 import ModelBreakdown from '../dashboard/ModelBreakdown';
-import { formatCurrency, formatNumber, getLatestUsageDate } from '../../lib/formatters';
+import { formatCurrency, formatNumber, formatRelativeTime, getLatestUsageDate } from '../../lib/formatters';
 
 const DashboardPage = ({
   data,
@@ -15,6 +15,7 @@ const DashboardPage = ({
   isClient,
   dataStatus,
   onRefresh,
+  lastUpdatedAt,
 }: {
   data: UsageData;
   totalCost: number;
@@ -23,11 +24,13 @@ const DashboardPage = ({
   isClient: boolean;
   dataStatus: 'idle' | 'loading' | 'error';
   onRefresh: () => void;
+  lastUpdatedAt: number | null;
 }) => {
   const [chartMode, setChartMode] = useState<'sideBySide' | 'stacked'>('sideBySide');
   const [timeRange, setTimeRange] = useState('7d');
   const [isLive, setIsLive] = useState(true);
   const [liveTokens, setLiveTokens] = useState(data.currentPeriod.inputTokens + data.currentPeriod.outputTokens);
+  const [, setTimeTick] = useState(0);
 
   useEffect(() => {
     if (!isClient || !isLive) return;
@@ -43,6 +46,14 @@ const DashboardPage = ({
     }
   }, [data.currentPeriod.inputTokens, data.currentPeriod.outputTokens, isLive]);
 
+  useEffect(() => {
+    if (!isClient || !lastUpdatedAt) return;
+    const interval = setInterval(() => {
+      setTimeTick((prev) => prev + 1);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [isClient, lastUpdatedAt]);
+
   const dailyAvgCost = totalCost > 0 ? totalCost / 26 : 0;
   const projectedMonthEnd = dailyAvgCost * 31;
   const daysUntilBudget = dailyAvgCost > 0 && budgetUsed < 100
@@ -50,6 +61,7 @@ const DashboardPage = ({
     : null;
 
   const latestUsageDate = useMemo(() => getLatestUsageDate(data), [data]);
+  const lastUpdatedLabel = formatRelativeTime(lastUpdatedAt);
   const cacheHitRate = data.currentPeriod.inputTokens > 0
     ? (data.currentPeriod.cacheReadTokens / data.currentPeriod.inputTokens) * 100
     : 0;
@@ -79,6 +91,10 @@ const DashboardPage = ({
               Offline
             </div>
           )}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] text-xs text-slate-400 font-medium">
+            <Icons.Refresh />
+            Updated {lastUpdatedLabel}
+          </div>
           <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)} className="glass-card glass-border bg-white/5 text-slate-200 px-4 py-2.5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 cursor-pointer hover:bg-white/10">
             <option value="7d" className="bg-slate-900">Last 7 days</option>
             <option value="30d" className="bg-slate-900">Last 30 days</option>

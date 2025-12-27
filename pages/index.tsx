@@ -37,12 +37,29 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
   const [isClient, setIsClient] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
   const [dataStatus, setDataStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const lastAlertsRef = useRef<Alert[] | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    const storedTheme = window.localStorage.getItem('theme');
+    if (storedTheme === 'dark' || storedTheme === 'light') {
+      setIsDark(storedTheme === 'dark');
+      return;
+    }
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDark(prefersDark);
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!isClient) return;
+    window.localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }, [isClient, isDark]);
 
   const refreshDashboard = useCallback(async (signal?: AbortSignal, showToast = false) => {
     if (!isClient) return;
@@ -51,6 +68,7 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
       const payload = await fetchDashboardData(signal);
       setDashboardData(payload);
       setDataStatus('idle');
+      setLastUpdatedAt(Date.now());
       if (showToast) {
         addToast({
           title: 'Dashboard refreshed',
@@ -166,12 +184,13 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
             isClient={isClient}
             dataStatus={dataStatus}
             onRefresh={() => refreshDashboard(undefined, true)}
+            lastUpdatedAt={lastUpdatedAt}
           />
         );
       case 'api-keys':
         return <ApiKeysPage apiKeys={dashboardData.apiKeys} isClient={isClient} />;
       case 'alerts':
-        return <AlertsPage alerts={dashboardData.alerts} onMarkRead={handleMarkRead} onMarkAllRead={handleMarkAllRead} />;
+        return <AlertsPage alerts={dashboardData.alerts} onMarkRead={handleMarkRead} onMarkAllRead={handleMarkAllRead} isClient={isClient} />;
       case 'logs':
         return <UsageLogsPage usageLogs={dashboardData.usageLogs} isClient={isClient} />;
       case 'team':
@@ -188,6 +207,7 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
             isClient={isClient}
             dataStatus={dataStatus}
             onRefresh={() => refreshDashboard(undefined, true)}
+            lastUpdatedAt={lastUpdatedAt}
           />
         );
     }
@@ -203,6 +223,9 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
       </Head>
 
       <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950' : 'bg-gradient-to-br from-slate-100 via-white to-slate-100'} text-white font-sans`}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[90] focus:bg-slate-900 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">
+          Skip to content
+        </a>
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-violet-500/10 rounded-full blur-3xl"></div>
@@ -219,7 +242,7 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
           onThemeToggle={() => setIsDark(!isDark)}
         />
 
-        <main className={`min-h-screen transition-all duration-300 ease-out-expo ${sidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
+        <main id="main-content" className={`min-h-screen transition-all duration-300 ease-out-expo ${sidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
           <div className="p-4 sm:p-6 lg:p-8">
             {renderPage()}
           </div>

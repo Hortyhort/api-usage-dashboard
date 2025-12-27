@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ApiKey } from '../../types/dashboard';
 import { Icons } from '../icons';
 import { formatNumber } from '../../lib/formatters';
@@ -10,6 +10,8 @@ type CopyStatus = 'success' | 'error' | 'unavailable';
 const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boolean }) => {
   const [showKey, setShowKey] = useState<Record<number, boolean>>({});
   const [copyStatus, setCopyStatus] = useState<{ key: string; status: CopyStatus } | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const resetCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copySupported = isClient && typeof navigator !== 'undefined' && navigator.clipboard && (typeof window === 'undefined' || window.isSecureContext);
   const { addToast } = useToast();
@@ -75,6 +77,19 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
     });
   };
 
+  const filteredKeys = useMemo(() => apiKeys.filter((apiKey) => {
+    if (statusFilter !== 'all' && apiKey.status !== statusFilter) return false;
+    if (search) {
+      const query = search.toLowerCase();
+      const matchesName = apiKey.name.toLowerCase().includes(query);
+      const matchesKey = apiKey.key.toLowerCase().includes(query);
+      if (!matchesName && !matchesKey) return false;
+    }
+    return true;
+  }), [apiKeys, search, statusFilter]);
+
+  const hasFilters = search || statusFilter !== 'all';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -99,6 +114,44 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
           }
         />
       ) : (
+        <>
+          <div className="glass-card glass-border rounded-2xl p-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex-1 min-w-[200px] relative">
+                <label htmlFor="api-key-search" className="sr-only">Search API keys</label>
+                <input
+                  id="api-key-search"
+                  type="text"
+                  placeholder="Search by name or key..."
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  className="w-full bg-slate-800/50 text-white pl-10 pr-4 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500/50 focus:outline-none placeholder-slate-500"
+                />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><Icons.Search /></div>
+              </div>
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | 'active' | 'inactive')} className="bg-slate-800/50 text-slate-200 px-4 py-2.5 rounded-xl border border-white/10 focus:border-emerald-500/50 focus:outline-none">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              {hasFilters && (
+                <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="text-sm text-slate-400 hover:text-white transition-colors">
+                  Clear filters
+                </button>
+              )}
+            </div>
+          </div>
+          {filteredKeys.length === 0 ? (
+            <EmptyState
+              title="No keys match your filters"
+              description="Try adjusting your search or filters."
+              action={hasFilters ? (
+                <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="bg-emerald-500/20 text-emerald-300 px-4 py-2 rounded-lg text-sm font-medium">
+                  Clear filters
+                </button>
+              ) : undefined}
+            />
+          ) : (
         <div className="glass-card glass-border rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -113,7 +166,7 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06]">
-                {apiKeys.map((apiKey) => {
+                {filteredKeys.map((apiKey) => {
                   const status = copyStatus?.key === apiKey.key ? copyStatus.status : null;
                   const CopyIcon = status === 'success'
                     ? Icons.Check
@@ -197,7 +250,13 @@ const ApiKeysPage = ({ apiKeys, isClient }: { apiKeys: ApiKey[]; isClient: boole
               </tbody>
             </table>
           </div>
+          <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.06] text-sm text-slate-400">
+            <span>Showing {filteredKeys.length} of {apiKeys.length} keys</span>
+            {hasFilters && <span className="text-xs text-slate-500">Filters active</span>}
+          </div>
         </div>
+          )}
+        </>
       )}
     </div>
   );

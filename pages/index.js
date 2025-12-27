@@ -438,7 +438,7 @@ const ModelBreakdown = ({ models }) => {
 // ============================================================================
 
 // Dashboard Page
-const DashboardPage = ({ data, totalCost, savings, budgetUsed }) => {
+const DashboardPage = ({ data, totalCost, savings, budgetUsed, isClient }) => {
   const [chartMode, setChartMode] = useState('sideBySide');
   const [timeRange, setTimeRange] = useState('7d');
   const [isLive, setIsLive] = useState(true);
@@ -446,12 +446,12 @@ const DashboardPage = ({ data, totalCost, savings, budgetUsed }) => {
 
   // Simulate live updates
   useEffect(() => {
-    if (!isLive) return;
+    if (!isClient || !isLive) return;
     const interval = setInterval(() => {
       setLiveTokens(prev => prev + Math.floor(Math.random() * 1000) + 100);
     }, 3000);
     return () => clearInterval(interval);
-  }, [isLive]);
+  }, [isClient, isLive]);
 
   // Projected cost calculation
   const dailyAvgCost = totalCost / 26; // days elapsed
@@ -595,14 +595,39 @@ const DashboardPage = ({ data, totalCost, savings, budgetUsed }) => {
 };
 
 // API Keys Page
-const ApiKeysPage = () => {
+const ApiKeysPage = ({ isClient }) => {
   const [showKey, setShowKey] = useState({});
-  const [copied, setCopied] = useState(null);
+  const [copyStatus, setCopyStatus] = useState(null);
+  const resetCopyTimerRef = useRef(null);
+  const copySupported = isClient && typeof navigator !== 'undefined' && navigator.clipboard && (typeof window === 'undefined' || window.isSecureContext);
 
-  const handleCopy = (key) => {
-    navigator.clipboard.writeText(key);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+  useEffect(() => {
+    return () => {
+      if (resetCopyTimerRef.current) {
+        clearTimeout(resetCopyTimerRef.current);
+      }
+    };
+  }, []);
+
+  const setCopyFeedback = (key, status) => {
+    setCopyStatus({ key, status });
+    if (resetCopyTimerRef.current) {
+      clearTimeout(resetCopyTimerRef.current);
+    }
+    resetCopyTimerRef.current = setTimeout(() => setCopyStatus(null), 2000);
+  };
+
+  const handleCopy = async (key) => {
+    if (!copySupported) {
+      setCopyFeedback(key, 'unavailable');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopyFeedback(key, 'success');
+    } catch (error) {
+      setCopyFeedback(key, 'error');
+    }
   };
 
   return (
@@ -632,8 +657,29 @@ const ApiKeysPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
-              {mockApiKeys.map((apiKey) => (
-                <tr key={apiKey.id} className="hover:bg-white/[0.02] transition-colors">
+              {mockApiKeys.map((apiKey) => {
+                const status = copyStatus?.key === apiKey.key ? copyStatus.status : null;
+                const CopyIcon = status === 'success'
+                  ? Icons.Check
+                  : status === 'error' || status === 'unavailable'
+                    ? Icons.Warning
+                    : Icons.Copy;
+                const copyTone = status === 'success'
+                  ? 'text-emerald-400'
+                  : status === 'error'
+                    ? 'text-red-400'
+                    : status === 'unavailable'
+                      ? 'text-amber-400'
+                      : copySupported
+                        ? 'text-slate-400 hover:text-white'
+                        : 'text-slate-500 hover:text-slate-400';
+                const copyTitle = !copySupported
+                  ? 'Clipboard copy unavailable in this context'
+                  : status === 'success'
+                    ? 'Copied'
+                    : 'Copy to clipboard';
+                return (
+                  <tr key={apiKey.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <div className="text-white font-medium">{apiKey.name}</div>
                     <div className="text-xs text-slate-500">Created {apiKey.created}</div>
@@ -646,9 +692,18 @@ const ApiKeysPage = () => {
                       <button onClick={() => setShowKey({ ...showKey, [apiKey.id]: !showKey[apiKey.id] })} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition-colors">
                         {showKey[apiKey.id] ? <Icons.EyeOff /> : <Icons.Eye />}
                       </button>
-                      <button onClick={() => handleCopy(apiKey.key)} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition-colors">
-                        {copied === apiKey.key ? <Icons.Check /> : <Icons.Copy />}
+                      <button
+                        onClick={() => handleCopy(apiKey.key)}
+                        className={`p-1.5 rounded-lg transition-colors ${copySupported ? 'hover:bg-white/[0.06]' : 'cursor-not-allowed hover:bg-white/[0.02]'} ${copyTone}`}
+                        title={copyTitle}
+                      >
+                        <CopyIcon />
                       </button>
+                      {status && (
+                        <span className={`text-xs font-medium ${status === 'success' ? 'text-emerald-400' : status === 'unavailable' ? 'text-amber-400' : 'text-red-400'}`}>
+                          {status === 'success' ? 'Copied' : status === 'unavailable' ? 'Unavailable' : 'Failed'}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -666,8 +721,9 @@ const ApiKeysPage = () => {
                       <Icons.Trash />
                     </button>
                   </td>
-                </tr>
-              ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -896,12 +952,35 @@ const TeamPage = () => (
 );
 
 // Rate Limits Page
-const RateLimitsPage = () => {
+const RateLimitsPage = ({ isClient }) => {
   const limits = [
     { name: 'Requests per minute', current: 847, max: 1000, color: 'blue' },
     { name: 'Tokens per minute', current: 89000, max: 100000, color: 'violet' },
     { name: 'Tokens per day', current: 2847293, max: 5000000, color: 'emerald' },
   ];
+  const [requestRate, setRequestRate] = useState(() => Array.from({ length: 60 }, () => 30));
+
+  useEffect(() => {
+    if (!isClient) return;
+    const minRate = 18;
+    const maxRate = 100;
+    const drift = 16;
+    const updateIntervalMs = 1500;
+
+    const seed = Array.from({ length: 60 }, () => minRate + Math.random() * (maxRate - minRate));
+    setRequestRate(seed);
+
+    const interval = setInterval(() => {
+      setRequestRate((prev) => {
+        const last = prev[prev.length - 1] ?? (minRate + (maxRate - minRate) / 2);
+        const delta = (Math.random() - 0.5) * drift;
+        const nextValue = Math.min(maxRate, Math.max(minRate, last + delta));
+        return [...prev.slice(1), nextValue];
+      });
+    }, updateIntervalMs);
+
+    return () => clearInterval(interval);
+  }, [isClient]);
 
   return (
     <div className="space-y-6">
@@ -939,8 +1018,7 @@ const RateLimitsPage = () => {
       <div className="glass-card glass-border rounded-2xl p-6">
         <h3 className="text-lg font-medium text-white mb-4">Request Rate (Last Hour)</h3>
         <div className="h-48 flex items-end gap-1">
-          {Array.from({ length: 60 }, (_, i) => {
-            const height = 20 + Math.random() * 80;
+          {requestRate.map((height, i) => {
             return (
               <div
                 key={i}
@@ -968,7 +1046,12 @@ export default function UsageDashboard() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isDark, setIsDark] = useState(true);
   const [alerts, setAlerts] = useState(mockAlerts);
+  const [isClient, setIsClient] = useState(false);
   const data = mockUsageData;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const totalCost = useMemo(() => calculateCost(data), []);
   const savings = useMemo(() => calculateSavings(data), []);
@@ -999,13 +1082,13 @@ export default function UsageDashboard() {
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'dashboard': return <DashboardPage data={data} totalCost={totalCost} savings={savings} budgetUsed={budgetUsed} />;
-      case 'api-keys': return <ApiKeysPage />;
+      case 'dashboard': return <DashboardPage data={data} totalCost={totalCost} savings={savings} budgetUsed={budgetUsed} isClient={isClient} />;
+      case 'api-keys': return <ApiKeysPage isClient={isClient} />;
       case 'alerts': return <AlertsPage alerts={alerts} onMarkRead={handleMarkRead} />;
       case 'logs': return <UsageLogsPage />;
       case 'team': return <TeamPage />;
-      case 'rate-limits': return <RateLimitsPage />;
-      default: return <DashboardPage data={data} totalCost={totalCost} savings={savings} budgetUsed={budgetUsed} />;
+      case 'rate-limits': return <RateLimitsPage isClient={isClient} />;
+      default: return <DashboardPage data={data} totalCost={totalCost} savings={savings} budgetUsed={budgetUsed} isClient={isClient} />;
     }
   };
 

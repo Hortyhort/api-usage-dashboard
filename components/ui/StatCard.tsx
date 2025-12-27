@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { Icons } from '../icons';
+import CopyableValue from './CopyableValue';
+import Tooltip from './Tooltip';
 
-const StatCard = ({ title, value, subtitle, icon, color, trend, delay }: {
+const StatCard = ({ title, value, subtitle, icon, color, trend, delay, tooltip, copyValue, copyLabel, sparkline, sparklineColor }: {
   title: string;
   value: string | number;
   subtitle?: string;
@@ -9,6 +11,11 @@ const StatCard = ({ title, value, subtitle, icon, color, trend, delay }: {
   color: 'blue' | 'violet' | 'emerald' | 'amber' | 'red';
   trend?: number;
   delay?: number;
+  tooltip?: string;
+  copyValue?: string;
+  copyLabel?: string;
+  sparkline?: number[];
+  sparklineColor?: string;
 }) => {
   const colors = {
     blue: { icon: 'bg-blue-500/20 text-blue-400', glow: 'shadow-glow-blue' },
@@ -26,7 +33,13 @@ const StatCard = ({ title, value, subtitle, icon, color, trend, delay }: {
             <div className={`p-2.5 rounded-xl ${colors[color].icon} transition-transform duration-300 group-hover:scale-110`}>
               {icon}
             </div>
-            <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</span>
+            {tooltip ? (
+              <Tooltip label={tooltip}>
+                <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</span>
+              </Tooltip>
+            ) : (
+              <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">{title}</span>
+            )}
           </div>
           {typeof trend === 'number' && (
             <div className={`flex items-center gap-1 text-xs font-medium ${trend > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -35,8 +48,33 @@ const StatCard = ({ title, value, subtitle, icon, color, trend, delay }: {
             </div>
           )}
         </div>
-        <div className="text-2xl sm:text-3xl font-semibold text-white tabular-nums tracking-tight">{value}</div>
+        <div className="text-2xl sm:text-3xl font-semibold text-white tabular-nums tracking-tight">
+          {copyValue ? (
+            <CopyableValue display={value} value={copyValue} label={copyLabel ?? title} />
+          ) : (
+            value
+          )}
+        </div>
         {subtitle && <div className="text-xs text-slate-500 mt-1.5 font-medium">{subtitle}</div>}
+        {sparkline && sparkline.length > 1 && (
+          <svg className="mt-3 h-8 w-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+            <polyline
+              points={sparkline.map((val, index) => {
+                const x = sparkline.length === 1 ? 0 : (index / (sparkline.length - 1)) * 100;
+                const max = Math.max(...sparkline);
+                const min = Math.min(...sparkline);
+                const range = max - min || 1;
+                const y = 28 - ((val - min) / range) * 24;
+                return `${x},${y}`;
+              }).join(' ')}
+              fill="none"
+              stroke={sparklineColor ?? '#60a5fa'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
       </div>
     </div>
   );

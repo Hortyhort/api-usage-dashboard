@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
-import type { GetStaticProps } from 'next';
+import type { GetServerSideProps } from 'next';
 import Sidebar, { PageId } from '../components/layout/Sidebar';
 import DashboardPage from '../components/pages/DashboardPage';
 import ApiKeysPage from '../components/pages/ApiKeysPage';
@@ -13,16 +13,58 @@ import { fetchDashboardData } from '../lib/api';
 import { mockDashboardData } from '../data/mockData';
 import type { DashboardData, Alert } from '../types/dashboard';
 import { useToast } from '../components/ui/ToastProvider';
+import { getSessionFromRequest, isAuthConfigured, SHARE_QUERY_KEY, verifyShareToken } from '../lib/auth';
 
 type UsageDashboardProps = {
   initialData: DashboardData;
+  shareToken: string | null;
+  readOnly: boolean;
 };
 
-export const getStaticProps: GetStaticProps<UsageDashboardProps> = async () => ({
-  props: {
-    initialData: mockDashboardData,
-  },
-});
+export const getServerSideProps: GetServerSideProps<UsageDashboardProps> = async ({ req, query }) => {
+  const authReady = isAuthConfigured();
+  const shareToken = typeof query[SHARE_QUERY_KEY] === 'string' ? query[SHARE_QUERY_KEY] : null;
+
+  if (!authReady) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  const session = getSessionFromRequest(req);
+  if (session) {
+    return {
+      props: {
+        initialData: mockDashboardData,
+        shareToken,
+        readOnly: Boolean(shareToken),
+      },
+    };
+  }
+
+  if (shareToken) {
+    const share = verifyShareToken(shareToken);
+    if (share) {
+      return {
+        props: {
+          initialData: mockDashboardData,
+          shareToken,
+          readOnly: true,
+        },
+      };
+    }
+  }
+
+  return {
+    redirect: {
+      destination: '/login',
+      permanent: false,
+    },
+  };
+};
 
 const isEditableTarget = (target: EventTarget | null) => {
   if (!(target instanceof HTMLElement)) return false;
@@ -30,7 +72,7 @@ const isEditableTarget = (target: EventTarget | null) => {
   return target.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select';
 };
 
-export default function UsageDashboard({ initialData }: UsageDashboardProps) {
+export default function UsageDashboard({ initialData, shareToken: initialShareToken, readOnly }: UsageDashboardProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
   const [isDark, setIsDark] = useState(true);
@@ -38,8 +80,14 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
   const [dashboardData, setDashboardData] = useState<DashboardData>(initialData);
   const [dataStatus, setDataStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [sharePassword, setSharePassword] = useState<string | null>(null);
+  const [shareGateOpen, setShareGateOpen] = useState(false);
+  const [shareGateMessage, setShareGateMessage] = useState<string | null>(null);
+  const [sharePasscode, setSharePasscode] = useState('');
   const lastAlertsRef = useRef<Alert[] | null>(null);
   const { addToast } = useToast();
+
+  const shareToken = initialShareToken;
 
   useEffect(() => {
     setIsClient(true);
@@ -61,14 +109,24 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
     window.localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isClient, isDark]);
 
-  const refreshDashboard = useCallback(async (signal?: AbortSignal, showToast = false) => {
+  useEffect(() => {
+    if (readOnly) {
+      setCurrentPage('dashboard');
+    }
+  }, [readOnly]);
+
+  const refreshDashboard = useCallback(async (signal?: AbortSignal, showToast = false, overrideSharePassword?: string | null) => {
     if (!isClient) return;
     setDataStatus('loading');
     try {
-      const payload = await fetchDashboardData(signal);
+      const payload = await fetchDashboardData(signal, {
+        shareToken,
+        sharePassword: overrideSharePassword ?? sharePassword,
+      });
       setDashboardData(payload);
       setDataStatus('idle');
       setLastUpdatedAt(Date.now());
+      setShareGateOpen(false);
       if (showToast) {
         addToast({
           title: 'Dashboard refreshed',
@@ -77,6 +135,13 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
         });
       }
     } catch (error) {
+      const code = (error as Error & { code?: string }).code;
+      if (code === 'share_password_required' || code === 'share_password_invalid') {
+        setShareGateOpen(true);
+        setShareGateMessage(code === 'share_password_invalid' ? 'Incorrect passcode. Try again.' : null);
+        setDataStatus('idle');
+        return;
+      }
       if ((error as Error).name === 'AbortError') return;
       setDataStatus('error');
       addToast({
@@ -85,7 +150,7 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
         variant: 'error',
       });
     }
-  }, [addToast, isClient]);
+  }, [addToast, isClient, sharePassword, shareToken]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -147,18 +212,22 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
             setCurrentPage('dashboard');
             break;
           case '2':
+            if (readOnly) return;
             event.preventDefault();
             setCurrentPage('api-keys');
             break;
           case '3':
+            if (readOnly) return;
             event.preventDefault();
             setCurrentPage('alerts');
             break;
           case '4':
+            if (readOnly) return;
             event.preventDefault();
             setCurrentPage('logs');
             break;
           case '5':
+            if (readOnly) return;
             event.preventDefault();
             setCurrentPage('team');
             break;
@@ -170,7 +239,17 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [readOnly]);
+
+  const handleUnlockShare = async () => {
+    if (!sharePasscode) {
+      setShareGateMessage('Enter the passcode to continue.');
+      return;
+    }
+    setSharePassword(sharePasscode);
+    setShareGateMessage(null);
+    await refreshDashboard(undefined, true, sharePasscode);
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -185,6 +264,8 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
             dataStatus={dataStatus}
             onRefresh={() => refreshDashboard(undefined, true)}
             lastUpdatedAt={lastUpdatedAt}
+            usageLogs={dashboardData.usageLogs}
+            readOnly={readOnly}
           />
         );
       case 'api-keys':
@@ -208,6 +289,8 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
             dataStatus={dataStatus}
             onRefresh={() => refreshDashboard(undefined, true)}
             lastUpdatedAt={lastUpdatedAt}
+            usageLogs={dashboardData.usageLogs}
+            readOnly={readOnly}
           />
         );
     }
@@ -235,11 +318,12 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
           isOpen={sidebarOpen}
           onToggle={() => setSidebarOpen(!sidebarOpen)}
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={readOnly ? () => setCurrentPage('dashboard') : setCurrentPage}
           user={dashboardData.user}
           unreadAlerts={unreadAlerts}
           isDark={isDark}
           onThemeToggle={() => setIsDark(!isDark)}
+          readOnly={readOnly}
         />
 
         <main id="main-content" className={`min-h-screen transition-all duration-300 ease-out-expo ${sidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
@@ -248,6 +332,33 @@ export default function UsageDashboard({ initialData }: UsageDashboardProps) {
           </div>
         </main>
       </div>
+
+      {shareGateOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="relative z-10 w-full max-w-md glass-card glass-border rounded-2xl p-6">
+            <h2 className="text-xl font-semibold text-white">Passcode required</h2>
+            <p className="text-sm text-slate-400 mt-2">Enter the passcode shared with you to unlock this dashboard.</p>
+            <div className="mt-4 space-y-3">
+              <input
+                type="password"
+                value={sharePasscode}
+                onChange={(event) => setSharePasscode(event.target.value)}
+                placeholder="Enter passcode"
+                className="w-full bg-slate-800/70 text-white px-4 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              />
+              {shareGateMessage && <div className="text-xs text-red-400">{shareGateMessage}</div>}
+              <button
+                type="button"
+                onClick={handleUnlockShare}
+                className="w-full bg-blue-500/20 text-blue-200 hover:bg-blue-500/30 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              >
+                Unlock dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

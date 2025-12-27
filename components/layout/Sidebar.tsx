@@ -39,6 +39,7 @@ const Sidebar = ({
   unreadAlerts,
   isDark,
   onThemeToggle,
+  readOnly = false,
 }: {
   isOpen: boolean;
   onToggle: () => void;
@@ -48,6 +49,7 @@ const Sidebar = ({
   unreadAlerts: number;
   isDark: boolean;
   onThemeToggle: () => void;
+  readOnly?: boolean;
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -64,14 +66,25 @@ const Sidebar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navItems: NavItemConfig[] = [
-    { id: 'dashboard', icon: Icons.Dashboard, label: 'Dashboard' },
-    { id: 'api-keys', icon: Icons.Key, label: 'API Keys' },
-    { id: 'alerts', icon: Icons.Bell, label: 'Alerts', badge: unreadAlerts > 0 ? { value: unreadAlerts, color: 'bg-red-500/20 text-red-400' } : null },
-    { id: 'logs', icon: Icons.Logs, label: 'Usage Logs' },
-    { id: 'team', icon: Icons.Team, label: 'Team' },
-    { id: 'rate-limits', icon: Icons.Gauge, label: 'Rate Limits' },
-  ];
+  const navItems: NavItemConfig[] = readOnly
+    ? [{ id: 'dashboard', icon: Icons.Dashboard, label: 'Dashboard' }]
+    : [
+      { id: 'dashboard', icon: Icons.Dashboard, label: 'Dashboard' },
+      { id: 'api-keys', icon: Icons.Key, label: 'API Keys' },
+      { id: 'alerts', icon: Icons.Bell, label: 'Alerts', badge: unreadAlerts > 0 ? { value: unreadAlerts, color: 'bg-red-500/20 text-red-400' } : null },
+      { id: 'logs', icon: Icons.Logs, label: 'Usage Logs' },
+      { id: 'team', icon: Icons.Team, label: 'Team' },
+      { id: 'rate-limits', icon: Icons.Gauge, label: 'Rate Limits' },
+    ];
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } finally {
+      window.location.href = '/login';
+    }
+  };
 
   return (
     <>
@@ -104,24 +117,33 @@ const Sidebar = ({
           </div>
 
           <div className="relative p-3 border-t border-white/[0.06]">
-            <UserAccountDropdown user={user} isOpen={userMenuOpen} dropdownRef={userMenuRef} />
-            <button
-              type="button"
-              ref={userButtonRef}
-              onClick={() => setUserMenuOpen((open) => !open)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${userMenuOpen ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'}`}
-              aria-expanded={userMenuOpen}
-              aria-haspopup="menu"
-            >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-sm font-semibold text-white shadow-lg shadow-orange-500/20">
-                {user.initials}
+            {readOnly ? (
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] text-slate-300 text-sm">
+                <Icons.Info />
+                Shared view
               </div>
-              <div className="flex-1 text-left min-w-0">
-                <div className="text-sm font-medium text-white truncate">{user.name}</div>
-                <div className="text-xs text-slate-500">{user.plan}</div>
-              </div>
-              <Icons.ChevronUpDown />
-            </button>
+            ) : (
+              <>
+                <UserAccountDropdown user={user} isOpen={userMenuOpen} dropdownRef={userMenuRef} onLogout={handleLogout} />
+                <button
+                  type="button"
+                  ref={userButtonRef}
+                  onClick={() => setUserMenuOpen((open) => !open)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${userMenuOpen ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'}`}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-sm font-semibold text-white shadow-lg shadow-orange-500/20">
+                    {user.initials}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="text-sm font-medium text-white truncate">{user.name}</div>
+                    <div className="text-xs text-slate-500">{user.plan}</div>
+                  </div>
+                  <Icons.ChevronUpDown />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </aside>

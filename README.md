@@ -7,6 +7,8 @@ A Next.js + Tailwind CSS dashboard UI for visualizing API usage, costs, alerts, 
 - Daily usage chart and model breakdown
 - Alerts and usage logs
 - API keys and team views
+- Password-protected access with read-only share links
+- CSV/JSON exports and range-based insights
 - Responsive layout
 
 ## Tech Stack
@@ -16,6 +18,13 @@ A Next.js + Tailwind CSS dashboard UI for visualizing API usage, costs, alerts, 
 
 ## Getting Started
 Prereqs: Node.js 18+ (see `.nvmrc`) and npm.
+
+Copy `.env.example` to `.env.local` and add auth settings:
+
+```bash
+AUTH_SECRET=replace-with-a-long-random-string
+DASHBOARD_PASSWORD=replace-with-a-strong-passcode
+```
 
 ```bash
 npm install
@@ -46,6 +55,9 @@ Open `http://localhost:3000` in your browser.
 
 ## Data
 All metrics are mocked in `data/mockData.ts` and served through `pages/api/usage.ts`. Replace the mock data with API calls or server-side data fetching as needed.
+
+## Authentication
+The dashboard is private by default. Sign in with the `DASHBOARD_PASSWORD`, and use the Share button to generate read-only links with an expiration (and optional passcode).
 
 ## Contributing
 See `CONTRIBUTING.md`.

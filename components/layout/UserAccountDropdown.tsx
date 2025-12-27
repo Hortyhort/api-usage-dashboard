@@ -7,6 +7,7 @@ type MenuActionItem = {
   label: string;
   shortcut?: string;
   hasSubmenu?: boolean;
+  onClick?: () => void;
 };
 
 type MenuItem =
@@ -14,7 +15,7 @@ type MenuItem =
   | { type: 'divider' }
   | ({ type?: undefined } & MenuActionItem);
 
-const UserAccountDropdown = ({ user, isOpen, dropdownRef }: { user: User; isOpen: boolean; dropdownRef: RefObject<HTMLDivElement> }) => {
+const UserAccountDropdown = ({ user, isOpen, dropdownRef, onLogout }: { user: User; isOpen: boolean; dropdownRef: RefObject<HTMLDivElement>; onLogout?: () => void }) => {
   if (!isOpen) return null;
 
   const menuItems: MenuItem[] = [
@@ -28,7 +29,7 @@ const UserAccountDropdown = ({ user, isOpen, dropdownRef }: { user: User; isOpen
     { icon: Icons.Gift, label: 'Gift Claude' },
     { icon: Icons.Info, label: 'Learn more', hasSubmenu: true },
     { type: 'divider' },
-    { icon: Icons.Logout, label: 'Log out' },
+    { icon: Icons.Logout, label: 'Log out', onClick: onLogout },
   ];
 
   return (
@@ -39,7 +40,7 @@ const UserAccountDropdown = ({ user, isOpen, dropdownRef }: { user: User; isOpen
           if (item.type === 'divider') return <div key={i} className="my-1.5 border-t border-white/[0.06]" />;
           if ('icon' in item) {
             return (
-              <button key={i} type="button" className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors" role="menuitem">
+              <button key={i} type="button" onClick={item.onClick} className="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors" role="menuitem">
                 <item.icon />
                 <span className="flex-1 text-left">{item.label}</span>
                 {item.shortcut && <span className="text-xs text-slate-500 font-medium"><span className="text-slate-600 mr-0.5">&#8984;</span>{item.shortcut}</span>}
